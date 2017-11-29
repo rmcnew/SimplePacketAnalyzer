@@ -1,4 +1,4 @@
-# LiquidFortressPacketAnalyzer
+# Liquid Fortress Packet Analyzer
 Packet Analysis tool for Computer Security graduate school class
 
 Copyright (c) 2017.  Richard Scott McNew.

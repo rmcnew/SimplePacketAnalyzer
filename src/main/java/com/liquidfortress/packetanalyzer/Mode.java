@@ -20,31 +20,13 @@
 
 package com.liquidfortress.packetanalyzer;
 
-import com.liquidfortress.packetanalyzer.cli_args.CommandLineValidator;
-import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
-import com.liquidfortress.packetanalyzer.logging.LoggerFactory;
-import org.apache.logging.log4j.core.Logger;
-
-public class Main {
-
-    public static void main(String[] args) {
-        ValidatedArgs validatedArgs = CommandLineValidator.validateCommandLineArgs(args);
-        Logger log = LoggerFactory.getLogger(validatedArgs.outputFile);
-
-        log.info("Starting " + validatedArgs.mode.name() + " . . .");
-        switch (validatedArgs.mode) {
-            case BASIC_ANALYSIS:
-
-                break;
-
-            case DETAILED_ANALYSIS:
-
-                break;
-
-            case POSSIBLE_ATTACKS_ANALYSIS:
-
-                break;
-        }
-    }
-
+/**
+ * Mode
+ * <p/>
+ * Mode enum
+ */
+public enum Mode {
+    BASIC_ANALYSIS,
+    DETAILED_ANALYSIS,
+    POSSIBLE_ATTACKS_ANALYSIS
 }

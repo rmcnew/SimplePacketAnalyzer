@@ -18,33 +18,30 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer;
+package com.liquidfortress.packetanalyzer.cli_args;
 
-import com.liquidfortress.packetanalyzer.cli_args.CommandLineValidator;
-import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
-import com.liquidfortress.packetanalyzer.logging.LoggerFactory;
-import org.apache.logging.log4j.core.Logger;
+import com.liquidfortress.packetanalyzer.Mode;
 
-public class Main {
+import java.io.File;
+import java.util.LinkedList;
 
-    public static void main(String[] args) {
-        ValidatedArgs validatedArgs = CommandLineValidator.validateCommandLineArgs(args);
-        Logger log = LoggerFactory.getLogger(validatedArgs.outputFile);
+/**
+ * ValidatedArgs
+ * <p/>
+ * Container for validated command line args
+ */
+public class ValidatedArgs {
 
-        log.info("Starting " + validatedArgs.mode.name() + " . . .");
-        switch (validatedArgs.mode) {
-            case BASIC_ANALYSIS:
+    public Mode mode;
+    public LinkedList<File> inputFiles;
+    public File outputFile = null;
 
-                break;
-
-            case DETAILED_ANALYSIS:
-
-                break;
-
-            case POSSIBLE_ATTACKS_ANALYSIS:
-
-                break;
-        }
+    @Override
+    public String toString() {
+        return "ValidatedArgs{" +
+                "mode=" + mode +
+                ", inputFiles=" + inputFiles +
+                ", outputFile=" + outputFile +
+                '}';
     }
-
 }

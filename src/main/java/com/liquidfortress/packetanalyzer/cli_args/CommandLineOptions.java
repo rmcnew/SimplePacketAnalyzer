@@ -40,12 +40,11 @@ public class CommandLineOptions {
     private static final Options options = new Options();
     private static final HelpFormatter helpFormatter = new HelpFormatter();
     private static final int width = 100;
-    private static final String header = "Liquid Fortress Packet Analyzer";
+    private static final String header = "";
     private static final String footer = "Example:  " + CLI_NAME + " -m 1 -f capture.tcpdump";
 
     static {
         Option mode = Option.builder("m")
-                .required(true)
                 .longOpt(MODE)
                 .hasArg()
                 .argName("MODE")
@@ -85,7 +84,6 @@ public class CommandLineOptions {
         options.addOption(mode);
 
         Option outputFile = Option.builder("o")
-                .required(false)
                 .longOpt(OUTPUT_FILE)
                 .hasArg()
                 .argName("OUTPUT_FILE")
@@ -95,7 +93,6 @@ public class CommandLineOptions {
         options.addOption(outputFile);
 
         Option inputFiles = Option.builder("f")
-                .required(true)
                 .longOpt(INPUT_FILES)
                 .hasArgs()
                 .argName("INPUT_FILES")
@@ -115,6 +112,7 @@ public class CommandLineOptions {
     }
 
     public static void printHelp() {
-        helpFormatter.printHelp(width, CLI_NAME, header, options, footer, true);
+        System.out.println("Liquid Fortress Packet Analyzer");
+        helpFormatter.printHelp(width, CLI_NAME, header, options, footer);
     }
 }

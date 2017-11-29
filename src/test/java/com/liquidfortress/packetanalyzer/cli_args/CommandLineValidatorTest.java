@@ -18,33 +18,23 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer;
+package com.liquidfortress.packetanalyzer.cli_args;
 
-import com.liquidfortress.packetanalyzer.cli_args.CommandLineValidator;
-import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
-import com.liquidfortress.packetanalyzer.logging.LoggerFactory;
-import org.apache.logging.log4j.core.Logger;
+import org.junit.Assert;
+import org.junit.Test;
 
-public class Main {
+/**
+ * CommandLineValidatorTest
+ * <p/>
+ * Tests for CommandLineValidator
+ */
+public class CommandLineValidatorTest {
 
-    public static void main(String[] args) {
+    @Test
+    public void modeValidateTest() {
+        String[] args = {"-m", "2", "-f", "1.txt", "2.txt"};
         ValidatedArgs validatedArgs = CommandLineValidator.validateCommandLineArgs(args);
-        Logger log = LoggerFactory.getLogger(validatedArgs.outputFile);
-
-        log.info("Starting " + validatedArgs.mode.name() + " . . .");
-        switch (validatedArgs.mode) {
-            case BASIC_ANALYSIS:
-
-                break;
-
-            case DETAILED_ANALYSIS:
-
-                break;
-
-            case POSSIBLE_ATTACKS_ANALYSIS:
-
-                break;
-        }
+        System.out.println(validatedArgs);
+        Assert.assertNotNull(validatedArgs);
     }
-
 }

@@ -20,12 +20,14 @@
 
 package com.liquidfortress.packetanalyzer.cli_args;
 
+import com.liquidfortress.packetanalyzer.Mode;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
 
 import java.io.File;
+import java.util.LinkedList;
 
 /**
  * CommandLineValidator
@@ -36,23 +38,39 @@ public class CommandLineValidator {
 
     private static final CommandLineParser commandLineParser = new DefaultParser();
 
-    private static boolean isModeValid(CommandLine commandLine) {
+    private static boolean isModeValid(CommandLine commandLine, ValidatedArgs validatedArgs) {
         if (commandLine.hasOption(CommandLineOptions.MODE)) {
             int mode = Integer.valueOf(commandLine.getOptionValue(CommandLineOptions.MODE));
-            return ((mode >= 1) && (mode <= 3));
+            switch (mode) {
+                case 1:
+                    validatedArgs.mode = Mode.BASIC_ANALYSIS;
+                    break;
+                case 2:
+                    validatedArgs.mode = Mode.DETAILED_ANALYSIS;
+                    break;
+                case 3:
+                    validatedArgs.mode = Mode.POSSIBLE_ATTACKS_ANALYSIS;
+                    break;
+                default:
+                    return false;
+            }
+            return true;
         }
         return false;
     }
 
-    private static boolean areInputFilesValid(CommandLine commandLine) {
+    private static boolean areInputFilesValid(CommandLine commandLine, ValidatedArgs validatedArgs) {
+        validatedArgs.inputFiles = new LinkedList<>();
         if (commandLine.hasOption(CommandLineOptions.INPUT_FILES)) {
-            String[] inputFiles = commandLine.getOptionValues(CommandLineOptions.INPUT_FILES);
-            for (String inputFile : inputFiles) {
+            String[] inputFileStrings = commandLine.getOptionValues(CommandLineOptions.INPUT_FILES);
+            for (String inputFileStr : inputFileStrings) {
                 // TODO: if no path separator is in the inputFile String, assume current directory as path and append it
-                File input = new File(inputFile);
+                File input = new File(inputFileStr);
                 if ((!input.exists()) || (!input.canRead())) {
-                    System.err.println("Input file: " + inputFile + " does not exist or cannot be read!");
+                    System.err.println("Input file: " + inputFileStr + " does not exist or cannot be read!");
                     return false;
+                } else {
+                    validatedArgs.inputFiles.add(input);
                 }
             }
             return true;
@@ -60,15 +78,16 @@ public class CommandLineValidator {
         return false;
     }
 
-    private static boolean isOutputFileValid(CommandLine commandLine) {
-        String outputFile = commandLine.getOptionValue(CommandLineOptions.OUTPUT_FILE);
+    private static boolean isOutputFileValid(CommandLine commandLine, ValidatedArgs validatedArgs) {
+        String outputFileStr = commandLine.getOptionValue(CommandLineOptions.OUTPUT_FILE);
         // TODO: if no path separator is in the outputFile String, assume current directory as path and append it
         // TODO: make sure the outputFile is not in the input file list
-        File output = new File(outputFile);
-        return output.canWrite();
+        validatedArgs.outputFile = new File(outputFileStr);
+        return validatedArgs.outputFile.canWrite();
     }
 
-    public static CommandLine validate(String[] args) {
+    public static ValidatedArgs validateCommandLineArgs(String[] args) {
+        ValidatedArgs validatedArgs = new ValidatedArgs();
         CommandLine commandLine = null;
         try {
             commandLine = commandLineParser.parse(CommandLineOptions.getCommandLineOptions(), args);
@@ -78,29 +97,26 @@ public class CommandLineValidator {
                 System.exit(0);
             }
             // mode
-            if (!isModeValid(commandLine)) {
+            if (!isModeValid(commandLine, validatedArgs)) {
                 System.err.println("Mode is not valid!  It must be 1, 2, or 3.");
                 CommandLineOptions.printHelp();
                 System.exit(-1);
             }
             // input files
-            if (!areInputFilesValid(commandLine)) {
+            if (!areInputFilesValid(commandLine, validatedArgs)) {
                 CommandLineOptions.printHelp();
                 System.exit(-2);
             }
             // output file
-            if (commandLine.hasOption(CommandLineOptions.OUTPUT_FILE) && !isOutputFileValid(commandLine)) {
+            if (commandLine.hasOption(CommandLineOptions.OUTPUT_FILE) && !isOutputFileValid(commandLine, validatedArgs)) {
                 CommandLineOptions.printHelp();
                 System.exit(-3);
             }
         } catch (ParseException e) {
-            System.err.println("ParseException: " + e);
-        } finally {
-            if (commandLine == null) {
-                System.err.println("Fatal error parsing command line!  Exiting . . .");
-                System.exit(-9);
-            }
+            CommandLineOptions.printHelp();
+            System.err.println("The error is:  " + e);
+            System.exit(-9);
         }
-        return commandLine;
+        return validatedArgs;
     }
 }
