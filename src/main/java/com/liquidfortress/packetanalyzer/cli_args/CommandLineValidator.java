@@ -83,7 +83,10 @@ public class CommandLineValidator {
         // TODO: if no path separator is in the outputFile String, assume current directory as path and append it
         // TODO: make sure the outputFile is not in the input file list
         validatedArgs.outputFile = new File(outputFileStr);
-        return validatedArgs.outputFile.canWrite();
+        boolean existsAndWritable = validatedArgs.outputFile.exists() && validatedArgs.outputFile.canWrite();
+        boolean doesNotExistButWritablePath = (validatedArgs.outputFile.getParentFile() != null) &&
+                (validatedArgs.outputFile.getParentFile().canWrite());
+        return (existsAndWritable || doesNotExistButWritablePath);
     }
 
     public static ValidatedArgs validateCommandLineArgs(String[] args) {
