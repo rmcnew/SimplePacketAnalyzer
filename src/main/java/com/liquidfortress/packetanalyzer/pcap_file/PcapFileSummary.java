@@ -18,15 +18,17 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer;
+package com.liquidfortress.packetanalyzer.pcap_file;
 
-import org.pcap4j.core.Pcaps;
-import org.pcap4j.core.PcapHandle;
+/**
+ * PcapFileSummary
+ * <p/>
+ * Results from processing a pcap file
+ */
+public class PcapFileSummary {
 
-public class PcapFile {
+    public long packetCount = 0;
 
-    public static PcapHandle openPcapFile(String filePath) {
-
-        return null;
+    public PcapFileSummary() {
     }
 }
