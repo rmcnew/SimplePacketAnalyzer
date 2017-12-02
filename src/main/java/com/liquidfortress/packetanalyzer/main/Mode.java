@@ -18,30 +18,15 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer.cli_args;
-
-import com.liquidfortress.packetanalyzer.main.Mode;
-
-import java.io.File;
-import java.util.LinkedList;
+package com.liquidfortress.packetanalyzer.main;
 
 /**
- * ValidatedArgs
+ * Mode
  * <p/>
- * Container for validated command line args
+ * Mode enum
  */
-public class ValidatedArgs {
-
-    public Mode mode;
-    public LinkedList<File> inputFiles;
-    public File outputFile = null;
-
-    @Override
-    public String toString() {
-        return "ValidatedArgs{" +
-                "mode=" + mode +
-                ", inputFiles=" + inputFiles +
-                ", outputFile=" + outputFile +
-                '}';
-    }
+public enum Mode {
+    BASIC_ANALYSIS,
+    DETAILED_ANALYSIS,
+    POSSIBLE_ATTACKS_ANALYSIS
 }

@@ -18,15 +18,19 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer;
+package com.liquidfortress.packetanalyzer.util;
+
+import java.net.Inet6Address;
+import java.util.Comparator;
 
 /**
- * Mode
+ * Inet6AddressComparator
  * <p/>
- * Mode enum
+ * Comparator for Inet6Address class
  */
-public enum Mode {
-    BASIC_ANALYSIS,
-    DETAILED_ANALYSIS,
-    POSSIBLE_ATTACKS_ANALYSIS
+public class Inet6AddressComparator implements Comparator<Inet6Address> {
+    @Override
+    public int compare(Inet6Address ip1, Inet6Address ip2) {
+        return ip1.getHostAddress().compareTo(ip2.getHostAddress());
+    }
 }

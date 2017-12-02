@@ -20,7 +20,7 @@
 
 package com.liquidfortress.packetanalyzer.cli_args;
 
-import com.liquidfortress.packetanalyzer.Mode;
+import com.liquidfortress.packetanalyzer.main.Mode;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;

@@ -18,7 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer;
+package com.liquidfortress.packetanalyzer.main;
 
 import com.liquidfortress.packetanalyzer.cli_args.CommandLineValidator;
 import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;

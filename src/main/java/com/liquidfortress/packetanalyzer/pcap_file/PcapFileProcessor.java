@@ -20,55 +20,52 @@
 
 package com.liquidfortress.packetanalyzer.pcap_file;
 
-import com.liquidfortress.packetanalyzer.Main;
-import com.liquidfortress.packetanalyzer.util.Inet4AddressComparator;
+import com.liquidfortress.packetanalyzer.main.Main;
+import com.liquidfortress.packetanalyzer.main.UniqueIpAddresses;
+import com.liquidfortress.packetanalyzer.packet.*;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.Pcaps;
-import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.IllegalRawDataException;
-import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.DataLinkType;
+import org.pcap4j.util.Packets;
 
 import java.io.File;
-import java.net.Inet4Address;
+import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public class PcapFileProcessor {
     private static Logger log = Main.log;
 
+    public static void processPacketSummary(PacketSummary packetSummary) {
 
-    private static ConcurrentSkipListSet<Inet4Address> uniqueIpv4Addresses =
-            new ConcurrentSkipListSet<>(new Inet4AddressComparator());
+    }
 
-    public static PacketSummary processPacket(Packet packet) {
-        PacketSummary packetSummary = new PacketSummary();
-        try {
-            log.info("Converting to ethernet packet");
-            EthernetPacket ethernetPacket = EthernetPacket.newPacket(packet.getRawData(), 0, packet.length());
-            EthernetPacket.EthernetHeader ethernetHeader = ethernetPacket.getHeader();
-            int ethernetHeaderLength = ethernetHeader.length();
-            log.info("Getting ethernet payload");
-            Packet ethPayloadPacket = ethernetPacket.getPayload();
-            log.info("Converting to IPv4 packet");
-            IpV4Packet ipV4Packet = IpV4Packet.newPacket(ethPayloadPacket.getRawData(), 0, ethPayloadPacket.length());
-            IpV4Packet.IpV4Header ipV4Header = ipV4Packet.getHeader();
-            log.info("Getting IPv4 addresses");
-            Inet4Address sourceAddress = ipV4Header.getSrcAddr();
-            Inet4Address destAddress = ipV4Header.getDstAddr();
-            log.info("Adding IPv4 addresses to set");
-            uniqueIpv4Addresses.add(sourceAddress);
-            uniqueIpv4Addresses.add(destAddress);
-
-        } catch (IllegalRawDataException e) {
-            log.error("Exception occurred while processing a packet. Exception was: " + e);
-            System.exit(-2);
+    public static void processPacket(Packet packet) {
+        if (packet == null) {
+            throw new IllegalArgumentException("Cannot process null packet!");
         }
-        return packetSummary;
+        Iterator<Packet> packetIterator = packet.iterator();
+        Packet currentPacket = packet;
+        do {
+            PacketSummary packetSummary;
+            if (Packets.containsEthernetPacket(currentPacket)) {
+                packetSummary = EthernetPacketProcessor.process(currentPacket);
+            } else if (Packets.containsIpV4Packet(currentPacket)) {
+                packetSummary = Ipv4PacketProcessor.process(currentPacket);
+            } else if (Packets.containsIpV6Packet(currentPacket)) {
+                packetSummary = Ipv6PacketProcessor.process(currentPacket);
+            } else if (Packets.containsTcpPacket(currentPacket)) {
+                packetSummary = TcpPacketProcessor.process(currentPacket);
+            } else if (Packets.containsUdpPacket(currentPacket)) {
+                packetSummary = UdpPacketProcessor.process(currentPacket);
+            } else {
+                throw new IllegalArgumentException("No processor to handle packet type: " + packet.getHeader());
+            }
+            processPacketSummary(packetSummary);
+        } while (packetIterator.hasNext());       
     }
 
     public static PcapFileSummary processPcapFile(File pcapFile) {
@@ -82,10 +79,10 @@ public class PcapFileProcessor {
             Packet packet;
             for (packet = pcapHandle.getNextPacket(); packet != null; packet = pcapHandle.getNextPacket()) {
                 pcapFileSummary.packetCount++;
-                PacketSummary packetSummary = processPacket(packet);
+                //processPacket(packet);
             }
             log.info("Packet count: " + pcapFileSummary.packetCount);
-            log.info("Unique IPv4 addresses: " + uniqueIpv4Addresses.size());
+            log.info("Unique IP addresses: " + UniqueIpAddresses.size());
         } catch (PcapNativeException | NotOpenException e) {
             log.error("Exception occurred while processing pcapFile: " + pcapFile + ".  Exception was: " + e);
         }
