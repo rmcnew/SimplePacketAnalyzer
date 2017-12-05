@@ -18,7 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer.main;
+package com.liquidfortress.packetanalyzer.statistics;
 
 import java.util.HashSet;
 

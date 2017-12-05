@@ -18,27 +18,38 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer.main;
+package com.liquidfortress.packetanalyzer.tcp;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * UniqueIpAddresses
+ * TcpConnections
  * <p/>
- * Track unique IP addresses
+ * Tracks the state of multiple TCP connections
  */
-public class UniqueIpAddresses {
+public class TcpConnections {
 
-    private static HashSet<String> uniqueIpAddresses =
-            new HashSet<>();
+    private static HashMap<IpAddressPair, TcpConnectionTracker> connections = new HashMap<>();
 
     public static int size() {
-        return uniqueIpAddresses.size();
+        return connections.size();
     }
 
-    public static boolean add(String hostAddress) {
-        return uniqueIpAddresses.add(hostAddress);
+    public static TcpConnectionTracker get(Object o) {
+        return connections.get(o);
+    }
+
+    public static TcpConnectionTracker put(IpAddressPair ipAddressPair, TcpConnectionTracker tcpConnectionTracker) {
+        return connections.put(ipAddressPair, tcpConnectionTracker);
+    }
+
+    public static Set<IpAddressPair> keySet() {
+        return connections.keySet();
+    }
+
+    public static Set<Map.Entry<IpAddressPair, TcpConnectionTracker>> entrySet() {
+        return connections.entrySet();
     }
 }
-
-
