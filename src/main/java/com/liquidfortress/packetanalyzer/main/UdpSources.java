@@ -23,22 +23,24 @@ package com.liquidfortress.packetanalyzer.main;
 import java.util.HashSet;
 
 /**
- * UniqueIpAddresses
+ * UdpSources
  * <p/>
- * Track unique IP addresses
+ * HashSet used to track unique UDP sources
  */
-public class UniqueIpAddresses {
+public class UdpSources {
 
-    private static HashSet<String> uniqueIpAddresses =
-            new HashSet<>();
+    // UDP sources are stored in "IP Address:port" format
+    private static HashSet<String> sources = new HashSet<>();
 
     public static int size() {
-        return uniqueIpAddresses.size();
+        return sources.size();
     }
 
-    public static boolean add(String hostAddress) {
-        return uniqueIpAddresses.add(hostAddress);
+    public static boolean contains(Object o) {
+        return sources.contains(o);
+    }
+
+    public static boolean add(String s) {
+        return sources.add(s);
     }
 }
-
-
