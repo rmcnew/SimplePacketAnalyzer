@@ -67,7 +67,7 @@ public class CommandLineValidator {
                 // TODO: if no path separator is in the inputFile String, assume current directory as path and append it
                 File input = new File(inputFileStr);
                 if ((!input.exists()) || (!input.canRead())) {
-                    System.err.println("Input file: " + inputFileStr + " does not exist or cannot be read!");
+                    System.out.println("Input file: " + inputFileStr + " does not exist or cannot be read!");
                     return false;
                 } else {
                     validatedArgs.inputFiles.add(input);
@@ -101,7 +101,7 @@ public class CommandLineValidator {
             }
             // mode
             if (!isModeValid(commandLine, validatedArgs)) {
-                System.err.println("Mode is not valid!  It must be 1, 2, or 3.");
+                System.out.println("Mode is not valid!  It must be 1, 2, or 3.");
                 CommandLineOptions.printHelp();
                 System.exit(-1);
             }
@@ -119,7 +119,7 @@ public class CommandLineValidator {
             if (commandLine.hasOption(CommandLineOptions.SILENT)) {
                 validatedArgs.silent = true;
                 if (validatedArgs.outputFile == null) {
-                    System.err.println("Silent and no output file means no output will occur.  You must specify an output file with silent!");
+                    System.out.println("Silent and no output file means no output will occur.  You must specify an output file with silent!");
                     CommandLineOptions.printHelp();
                     System.exit(-4);
                 }
@@ -130,7 +130,7 @@ public class CommandLineValidator {
             }
         } catch (ParseException e) {
             CommandLineOptions.printHelp();
-            System.err.println("The error is:  " + e);
+            System.out.println("The error is:  " + e);
             System.exit(-9);
         }
         return validatedArgs;
