@@ -29,14 +29,16 @@ import java.util.HashSet;
  */
 public class UniqueIpAddresses {
 
-    private static HashSet<String> uniqueIpAddresses =
-            new HashSet<>();
+    private HashSet<String> uniqueIpAddresses = new HashSet<>();
 
-    public static int size() {
+    public UniqueIpAddresses() {
+    }
+
+    public int size() {
         return uniqueIpAddresses.size();
     }
 
-    public static boolean add(String hostAddress) {
+    public boolean add(String hostAddress) {
         return uniqueIpAddresses.add(hostAddress);
     }
 }

@@ -20,6 +20,9 @@
 
 package com.liquidfortress.packetanalyzer.pcap_file;
 
+import com.liquidfortress.packetanalyzer.statistics.UdpSources;
+import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
+
 /**
  * PcapFileSummary
  * <p/>
@@ -27,8 +30,14 @@ package com.liquidfortress.packetanalyzer.pcap_file;
  */
 public class PcapFileSummary {
 
+    public final String filename;
     public long packetCount = 0;
+    public long nonIpPacketCount = 0;
+    public long tcpConnectionCount = 0;
+    public UniqueIpAddresses uniqueIpAddresses = new UniqueIpAddresses();
+    public UdpSources udpSources = new UdpSources();
 
-    public PcapFileSummary() {
+    public PcapFileSummary(String filename) {
+        this.filename = filename;
     }
 }

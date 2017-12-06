@@ -22,7 +22,7 @@ package com.liquidfortress.packetanalyzer.ip;
 
 import com.liquidfortress.packetanalyzer.icmp.IcmpPacketProcessor;
 import com.liquidfortress.packetanalyzer.main.Main;
-import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
+import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import com.liquidfortress.packetanalyzer.tcp.TcpPacketProcessor;
 import com.liquidfortress.packetanalyzer.udp.UdpPacketProcessor;
 import org.apache.logging.log4j.core.Logger;
@@ -44,31 +44,31 @@ public class IpPacketProcessor {
     private static Logger log = Main.log;
 
 
-    public static void processIpv4Packet(Packet packet) {
+    public static void processIpv4Packet(Packet packet, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
-            log.info("Converting to IPv4 packet");
+            log.trace("Converting to IPv4 packet");
             IpV4Packet ipV4Packet = IpV4Packet.newPacket(packet.getRawData(), 0, packet.length());
             IpV4Packet.IpV4Header ipV4Header = ipV4Packet.getHeader();
             Inet4Address sourceAddress = ipV4Header.getSrcAddr();
             Inet4Address destAddress = ipV4Header.getDstAddr();
-            log.info("Adding IPv4 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
-            UniqueIpAddresses.add(sourceAddress.getHostAddress());
-            UniqueIpAddresses.add(destAddress.getHostAddress());
+            log.trace("Adding IPv4 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
+            pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
+            pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());
             IpNumber ipNumber = ipV4Header.getProtocol();
             Packet payload = ipV4Packet.getPayload();
             if (ipNumber == IpNumber.ICMPV4) {
-                IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else if (ipNumber == IpNumber.ICMPV6) {
-                IcmpPacketProcessor.processIcmpv6Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                IcmpPacketProcessor.processIcmpv6Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else if (ipNumber == IpNumber.TCP) {
-                TcpPacketProcessor.processTcpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                TcpPacketProcessor.processTcpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else if (ipNumber == IpNumber.UDP) {
-                UdpPacketProcessor.processUdpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                UdpPacketProcessor.processUdpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else {
-                log.warn("Skipping packet: " + payload);
+                log.trace("Skipping packet: " + payload);
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
@@ -76,31 +76,31 @@ public class IpPacketProcessor {
         }
     }
 
-    public static void processIpv6Packet(Packet packet) {
+    public static void processIpv6Packet(Packet packet, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
-            log.info("Converting to IPv6 packet");
+            log.trace("Converting to IPv6 packet");
             IpV6Packet ipV6Packet = IpV6Packet.newPacket(packet.getRawData(), 0, packet.length());
             IpV6Packet.IpV6Header ipV6Header = ipV6Packet.getHeader();
             Inet6Address sourceAddress = ipV6Header.getSrcAddr();
             Inet6Address destAddress = ipV6Header.getDstAddr();
-            log.info("Adding IPv6 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
-            UniqueIpAddresses.add(sourceAddress.getHostAddress());
-            UniqueIpAddresses.add(destAddress.getHostAddress());
+            log.trace("Adding IPv6 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
+            pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
+            pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());
             IpNumber ipNumber = ipV6Header.getProtocol();
             Packet payload = ipV6Packet.getPayload();
             if (ipNumber == IpNumber.ICMPV4) {
-                IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else if (ipNumber == IpNumber.ICMPV6) {
-                IcmpPacketProcessor.processIcmpv6Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                IcmpPacketProcessor.processIcmpv6Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else if (ipNumber == IpNumber.TCP) {
-                TcpPacketProcessor.processTcpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                TcpPacketProcessor.processTcpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else if (ipNumber == IpNumber.UDP) {
-                UdpPacketProcessor.processUdpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress());
+                UdpPacketProcessor.processUdpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
             } else {
-                log.warn("Skipping packet: " + payload);
+                log.trace("Skipping packet: " + payload);
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);

@@ -21,6 +21,7 @@
 package com.liquidfortress.packetanalyzer.icmp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
+import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.IcmpV4Type;
@@ -34,12 +35,12 @@ import org.pcap4j.packet.namednumber.IcmpV6Type;
 public class IcmpPacketProcessor {
     private static Logger log = Main.log;
 
-    public static void processIcmpv4Packet(Packet packet, String sourceAddress, String destinationAddress) {
+    public static void processIcmpv4Packet(Packet packet, String sourceAddress, String destinationAddress, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
-            log.info("Converting to ICMPv4 packet");
+            log.trace("Converting to ICMPv4 packet");
             IcmpV4CommonPacket icmpV4CommonPacket = IcmpV4CommonPacket.newPacket(packet.getRawData(), 0, packet.length());
             IcmpV4CommonPacket.IcmpV4CommonHeader icmpV4CommonHeader = icmpV4CommonPacket.getHeader();
             IcmpV4Type icmpV4Type = icmpV4CommonHeader.getType();
@@ -48,17 +49,17 @@ public class IcmpPacketProcessor {
                 IcmpV4EchoPacket.IcmpV4EchoHeader icmpV4EchoHeader = icmpV4EchoPacket.getHeader();
                 short identifier = icmpV4EchoHeader.getIdentifier();
                 short sequenceNumber = icmpV4EchoHeader.getSequenceNumber();
-                log.info("ICMPv4_ECHO_REQUEST{ source: " + sourceAddress + ", destination: " + destinationAddress +
+                log.trace("ICMPv4_ECHO_REQUEST{ source: " + sourceAddress + ", destination: " + destinationAddress +
                         ", identifier: " + identifier + ", seq number: " + sequenceNumber + " }");
             } else if (icmpV4Type == IcmpV4Type.ECHO_REPLY) {
                 IcmpV4EchoReplyPacket icmpV4EchoReplyPacket = IcmpV4EchoReplyPacket.newPacket(icmpV4CommonPacket.getRawData(), 0, icmpV4CommonPacket.length());
                 IcmpV4EchoReplyPacket.IcmpV4EchoReplyHeader icmpV4EchoReplyHeader = icmpV4EchoReplyPacket.getHeader();
                 short identifier = icmpV4EchoReplyHeader.getIdentifier();
                 short sequenceNumber = icmpV4EchoReplyHeader.getSequenceNumber();
-                log.info("ICMPv4_ECHO_REPLY{ source: " + sourceAddress + ", destination: " + destinationAddress +
+                log.trace("ICMPv4_ECHO_REPLY{ source: " + sourceAddress + ", destination: " + destinationAddress +
                         ", identifier: " + identifier + ", seq number: " + sequenceNumber + " }");
             } else {
-                log.info("Other ICMPv4 packet with type: " + icmpV4Type);
+                log.trace("Other ICMPv4 packet with type: " + icmpV4Type);
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
@@ -66,12 +67,12 @@ public class IcmpPacketProcessor {
         }
     }
 
-    public static void processIcmpv6Packet(Packet packet, String sourceAddress, String destinationAddress) {
+    public static void processIcmpv6Packet(Packet packet, String sourceAddress, String destinationAddress, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
-            log.info("Converting to ICMPv6 packet");
+            log.trace("Converting to ICMPv6 packet");
             IcmpV6CommonPacket icmpV6CommonPacket = IcmpV6CommonPacket.newPacket(packet.getRawData(), 0, packet.length());
             IcmpV6CommonPacket.IcmpV6CommonHeader icmpV6CommonHeader = icmpV6CommonPacket.getHeader();
             IcmpV6Type icmpV6Type = icmpV6CommonHeader.getType();
@@ -80,17 +81,17 @@ public class IcmpPacketProcessor {
                 IcmpV6EchoRequestPacket.IcmpV6EchoRequestHeader icmpV6EchoRequestHeader = icmpV6EchoRequestPacket.getHeader();
                 short identifier = icmpV6EchoRequestHeader.getIdentifier();
                 short sequenceNumber = icmpV6EchoRequestHeader.getSequenceNumber();
-                log.info("ICMPv6_ECHO_REQUEST{ source: " + sourceAddress + ", destination: " + destinationAddress +
+                log.trace("ICMPv6_ECHO_REQUEST{ source: " + sourceAddress + ", destination: " + destinationAddress +
                         ", identifier: " + identifier + ", seq number: " + sequenceNumber + " }");
             } else if (icmpV6Type == IcmpV6Type.ECHO_REPLY) {
                 IcmpV6EchoReplyPacket icmpV6EchoReplyPacket = IcmpV6EchoReplyPacket.newPacket(icmpV6CommonPacket.getRawData(), 0, icmpV6CommonPacket.length());
                 IcmpV6EchoReplyPacket.IcmpV6EchoReplyHeader icmpV6EchoReplyHeader = icmpV6EchoReplyPacket.getHeader();
                 short identifier = icmpV6EchoReplyHeader.getIdentifier();
                 short sequenceNumber = icmpV6EchoReplyHeader.getSequenceNumber();
-                log.info("ICMPv6_ECHO_REPLY{ source: " + sourceAddress + ", destination: " + destinationAddress +
+                log.trace("ICMPv6_ECHO_REPLY{ source: " + sourceAddress + ", destination: " + destinationAddress +
                         ", identifier: " + identifier + ", seq number: " + sequenceNumber + " }");
             } else {
-                log.info("Other ICMPv6 packet with type: " + icmpV6Type);
+                log.trace("Other ICMPv6 packet with type: " + icmpV6Type);
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);

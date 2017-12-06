@@ -21,6 +21,7 @@
 package com.liquidfortress.packetanalyzer.tcp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
+import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.Packet;
@@ -35,12 +36,12 @@ import org.pcap4j.packet.namednumber.TcpPort;
 public class TcpPacketProcessor {
     private static Logger log = Main.log;
 
-    public static void processTcpPacket(Packet packet, String sourceAddress, String destinationAddress) {
+    public static void processTcpPacket(Packet packet, String sourceAddress, String destinationAddress, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
-            log.info("Converting to TCP packet");
+            log.trace("Converting to TCP packet");
             TcpPacket tcpPacket = TcpPacket.newPacket(packet.getRawData(), 0, packet.length());
             TcpPacket.TcpHeader tcpHeader = tcpPacket.getHeader();
             TcpPort sourcePort = tcpHeader.getSrcPort();
@@ -52,26 +53,67 @@ public class TcpPacketProcessor {
             boolean fin = tcpHeader.getFin();
             int sequenceNumber = tcpHeader.getSequenceNumber();
             int acknowledgementNumber = tcpHeader.getAcknowledgmentNumber();
-            log.info("TCP{ source: " + tcpSource + ", destination: " + tcpDestination +
+            log.trace("TCP{ source: " + tcpSource + ", destination: " + tcpDestination +
                     ", SYN: " + syn + ", ACK: " + ack + ", FIN: " + fin +
                     ", seq number: " + sequenceNumber + ", ack number: " + acknowledgementNumber + " }");
             // Track TCP connection state
             IpAddressPair addressPair = new IpAddressPair(tcpSource, tcpDestination);
-            TcpConnectionTracker tcpConnectionTracker = TcpConnections.get(addressPair);
+            TcpConnectionTracker tcpConnectionTracker = ActiveTcpConnections.get(addressPair);
             if (tcpConnectionTracker == null) {
                 tcpConnectionTracker = new TcpConnectionTracker(tcpSource, tcpDestination);
-                if (syn) { // step 1
+                if (syn) { // step 1: Client SYN
                     tcpConnectionTracker.setStep1ClientSequenceNumber(sequenceNumber);
-                    TcpConnections.put(addressPair, tcpConnectionTracker);
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                    ActiveTcpConnections.put(addressPair, tcpConnectionTracker);
                 }
-            } else if (!tcpConnectionTracker.isConnected()) {
-                if (syn && ack) { // step 2
+            } else if (!tcpConnectionTracker.isConnected() && !tcpConnectionTracker.isClosed()) {
+                if (syn && ack) { // step 2: Server SYN-ACK
                     tcpConnectionTracker.setStep2Numbers(acknowledgementNumber, sequenceNumber);
-                } else if (ack) { // step 3
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                } else if (ack) { // step 3: Client ACK
                     tcpConnectionTracker.setStep3Numbers(acknowledgementNumber, sequenceNumber);
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                    pcapFileSummary.tcpConnectionCount++;
+                }
+            } else if (tcpConnectionTracker.isConnected() && !tcpConnectionTracker.isClosed()) {
+                if (fin && tcpConnectionTracker.getStep4CloseRequestSequenceNumber() == TcpConnectionTracker.NOT_DEFINED) {
+                    // step 4: Initiator FIN_WAIT_1
+                    tcpConnectionTracker.setStep4CloseRequestSequenceNumber(sequenceNumber);
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                } else if (ack && !fin &&
+                        tcpConnectionTracker.getStep4CloseRequestSequenceNumber() != TcpConnectionTracker.NOT_DEFINED &&
+                        tcpConnectionTracker.getStep5CloseRequestAckNumber() == TcpConnectionTracker.NOT_DEFINED) {
+                    // step 5: Receiver ACK
+                    tcpConnectionTracker.setStep5CloseRequestAckNumber(acknowledgementNumber);
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                } else if (fin && !ack &&
+                        tcpConnectionTracker.getStep5CloseRequestAckNumber() != TcpConnectionTracker.NOT_DEFINED &&
+                        tcpConnectionTracker.getStep6CloseRequestSequenceNumber() == TcpConnectionTracker.NOT_DEFINED) {
+                    // step 6: Receiver FIN
+                    tcpConnectionTracker.setStep6CloseRequestSequenceNumber(sequenceNumber);
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                } else if (fin && ack &&
+                        tcpConnectionTracker.getStep4CloseRequestSequenceNumber() != TcpConnectionTracker.NOT_DEFINED &&
+                        tcpConnectionTracker.getStep5CloseRequestAckNumber() == TcpConnectionTracker.NOT_DEFINED &&
+                        tcpConnectionTracker.getStep6CloseRequestSequenceNumber() == TcpConnectionTracker.NOT_DEFINED) {
+                    // combined step 5 and 6: Receiver FIN and ACK
+                    tcpConnectionTracker.setStep5CloseRequestAckNumber(acknowledgementNumber);
+                    tcpConnectionTracker.setStep6CloseRequestSequenceNumber(sequenceNumber);
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                } else if (ack && !fin &&
+                        tcpConnectionTracker.getStep5CloseRequestAckNumber() != TcpConnectionTracker.NOT_DEFINED &&
+                        tcpConnectionTracker.getStep6CloseRequestSequenceNumber() != TcpConnectionTracker.NOT_DEFINED &&
+                        tcpConnectionTracker.getStep7CloseRequestAckNumber() == TcpConnectionTracker.NOT_DEFINED) {
+                    // step 7: Initiator ACK
+                    tcpConnectionTracker.setStep7CloseRequestAckNumber(acknowledgementNumber);
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
+                    // remove the closed TCP connection from tracking
+                    ClosedTcpConnections.add(tcpConnectionTracker);
+                    ActiveTcpConnections.remove(addressPair);
+                } else { // add to flow tracking
+                    tcpConnectionTracker.addFlowBytes((long) packet.length());
                 }
             }
-
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
             System.exit(-2);

@@ -21,7 +21,7 @@
 package com.liquidfortress.packetanalyzer.udp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
-import com.liquidfortress.packetanalyzer.statistics.UdpSources;
+import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.Packet;
@@ -37,21 +37,21 @@ public class UdpPacketProcessor {
     private static Logger log = Main.log;
 
 
-    public static void processUdpPacket(Packet packet, String sourceAddress, String destinationAddress) {
+    public static void processUdpPacket(Packet packet, String sourceAddress, String destinationAddress, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
-            log.info("Converting to UDP packet");
+            log.trace("Converting to UDP packet");
             UdpPacket udpPacket = UdpPacket.newPacket(packet.getRawData(), 0, packet.length());
             UdpPacket.UdpHeader udpHeader = udpPacket.getHeader();
             UdpPort sourcePort = udpHeader.getSrcPort();
             UdpPort destinationPort = udpHeader.getDstPort();
             String udpSource = sourceAddress + ":" + sourcePort.toString();
             String udpDestination = destinationAddress + ":" + destinationPort.toString();
-            log.info("Adding UDP source to set: " + udpSource);
-            UdpSources.add(udpSource);
-            log.info("UDP{ source: " + udpSource + ", destination: " + udpDestination + " }");
+            log.trace("Adding UDP source to set: " + udpSource);
+            pcapFileSummary.udpSources.add(udpSource);
+            log.trace("UDP{ source: " + udpSource + ", destination: " + udpDestination + " }");
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
             System.exit(-2);

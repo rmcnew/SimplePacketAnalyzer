@@ -35,6 +35,8 @@ public class ValidatedArgs {
     public Mode mode;
     public LinkedList<File> inputFiles;
     public File outputFile = null;
+    public boolean silent = false;
+    public boolean verbose = false;
 
     @Override
     public String toString() {
@@ -42,6 +44,8 @@ public class ValidatedArgs {
                 "mode=" + mode +
                 ", inputFiles=" + inputFiles +
                 ", outputFile=" + outputFile +
+                ", silent=" + silent +
+                ", verbose=" + verbose +
                 '}';
     }
 }

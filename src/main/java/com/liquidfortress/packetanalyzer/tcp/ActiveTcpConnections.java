@@ -25,11 +25,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * TcpConnections
+ * ActiveTcpConnections
  * <p/>
  * Tracks the state of multiple TCP connections
  */
-public class TcpConnections {
+public class ActiveTcpConnections {
 
     private static HashMap<IpAddressPair, TcpConnectionTracker> connections = new HashMap<>();
 
@@ -51,5 +51,9 @@ public class TcpConnections {
 
     public static Set<Map.Entry<IpAddressPair, TcpConnectionTracker>> entrySet() {
         return connections.entrySet();
+    }
+
+    public static TcpConnectionTracker remove(Object o) {
+        return connections.remove(o);
     }
 }

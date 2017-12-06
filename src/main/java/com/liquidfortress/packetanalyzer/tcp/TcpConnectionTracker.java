@@ -20,14 +20,19 @@
 
 package com.liquidfortress.packetanalyzer.tcp;
 
+import com.liquidfortress.packetanalyzer.main.Main;
+import org.apache.logging.log4j.core.Logger;
+
+import java.time.Instant;
+
 /**
  * TcpConnectionTracker
  * <p/>
  * Records the progress of a single TCP connection
  */
 public class TcpConnectionTracker {
-
-    private static final int NOT_DEFINED = -1;
+    public static final int NOT_DEFINED = -1;
+    private static Logger log = Main.log;
     private final String clientAddress;
     private final String serverAddress;
 
@@ -36,12 +41,22 @@ public class TcpConnectionTracker {
     private int step2ServerSequenceNumber = NOT_DEFINED; // chosen by server
     private int step3ClientSequenceNumber = NOT_DEFINED; // should be step1ClientSequenceNumber + 1
     private int step3ClientAckNumber = NOT_DEFINED;      // should be step2ServerSequenceNumber + 1
-    private boolean connected = false;
+    private int step4CloseRequestSequenceNumber = NOT_DEFINED;
+    private int step5CloseRequestAckNumber = NOT_DEFINED;
+    private int step6CloseRequestSequenceNumber = NOT_DEFINED;
+    private int step7CloseRequestAckNumber = NOT_DEFINED;
+    private boolean connected = false;  // only true if the connection has been established and is open
+    private boolean closed = false; // only true after the connection has been closed
+    private Instant connectionEstablished;
+    private Instant connectionClosed;
+    private long totalBytesInFlow = 0;
 
     public TcpConnectionTracker(String clientAddress, String serverAddress) {
         this.clientAddress = clientAddress;
         this.serverAddress = serverAddress;
     }
+
+    // Accessors
 
     public String getClientAddress() {
         return clientAddress;
@@ -55,10 +70,6 @@ public class TcpConnectionTracker {
         return step1ClientSequenceNumber;
     }
 
-    public void setStep1ClientSequenceNumber(int step1ClientSequenceNumber) {
-        this.step1ClientSequenceNumber = step1ClientSequenceNumber;
-    }
-
     public int getStep2ServerAckNumber() {
         return step2ServerAckNumber;
     }
@@ -66,20 +77,6 @@ public class TcpConnectionTracker {
     public int getStep2ServerSequenceNumber() {
         return step2ServerSequenceNumber;
     }
-
-    public void setStep2Numbers(int step2ServerAckNumber, int step2ServerSequenceNumber) {
-        if (step1ClientSequenceNumber == NOT_DEFINED) {
-            throw new IllegalStateException("Step 1 Client Sequence Number not yet set!");
-        }
-        if (step2ServerAckNumber != (step1ClientSequenceNumber + 1)) {
-            throw new IllegalArgumentException("Step 2 Server Ack Number should be Step 1 Client Sequence Number + 1!" +
-                    "step1ClientSequenceNumber is: " + step1ClientSequenceNumber +
-                    "step2ServerAckNumber argument is: " + step2ServerAckNumber);
-        }
-        this.step2ServerAckNumber = step2ServerAckNumber;
-        this.step2ServerSequenceNumber = step2ServerSequenceNumber;
-    }
-
 
     public int getStep3ClientSequenceNumber() {
         return step3ClientSequenceNumber;
@@ -89,32 +86,198 @@ public class TcpConnectionTracker {
         return step3ClientAckNumber;
     }
 
-    public void setStep3Numbers(int step3ClientAckNumber, int step3ClientSequenceNumber) {
-        if (step1ClientSequenceNumber == NOT_DEFINED) {
-            throw new IllegalStateException("Step 1 Client Sequence Number not yet set!");
+    public int getStep4CloseRequestSequenceNumber() {
+        return step4CloseRequestSequenceNumber;
+    }
+
+    public void setStep4CloseRequestSequenceNumber(int step4CloseRequestSequenceNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
         }
-        if (step2ServerAckNumber == NOT_DEFINED) {
-            throw new IllegalStateException("Step 2 Server Ack Number not yet set!");
+        if (!connected) {
+            log.trace("TCP connection was never made!");
+            return;
         }
-        if (step2ServerSequenceNumber == NOT_DEFINED) {
-            throw new IllegalStateException("Step 2 Server Sequence Number not yet set!");
+        this.step4CloseRequestSequenceNumber = step4CloseRequestSequenceNumber;
+    }
+
+    public int getStep5CloseRequestAckNumber() {
+        return step5CloseRequestAckNumber;
+    }
+
+    public void setStep5CloseRequestAckNumber(int step5CloseRequestAckNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
         }
-        if (step3ClientAckNumber != (step2ServerSequenceNumber + 1)) {
-            throw new IllegalArgumentException("Step 3 Client Ack Number should be Step 2 Server Sequence Number + 1!" +
-                    "step2ServerSequenceNumber is: " + step2ServerSequenceNumber +
-                    "step3ClientAckNumber argument is: " + step3ClientAckNumber);
+        if (!connected) {
+            log.trace("TCP connection was never made!");
+            return;
         }
-        if (step3ClientSequenceNumber != (step1ClientSequenceNumber + 1)) {
-            throw new IllegalArgumentException("Step 3 Client Sequence Number should be Step 1 Client Sequence Number + 1!" +
-                    "step1ClientSequenceNumber is: " + step1ClientSequenceNumber +
-                    "step3ClientSequenceNumber argument is: " + step3ClientSequenceNumber);
+        if (this.step4CloseRequestSequenceNumber == NOT_DEFINED) {
+            log.trace("step4CloseRequestSequenceNumber was not set!");
+            return;
         }
-        this.step3ClientAckNumber = step3ClientAckNumber;
-        this.step3ClientSequenceNumber = step3ClientSequenceNumber;
-        this.connected = true;
+        this.step5CloseRequestAckNumber = step5CloseRequestAckNumber;
+    }
+
+    public int getStep6CloseRequestSequenceNumber() {
+        return step6CloseRequestSequenceNumber;
+    }
+
+    public void setStep6CloseRequestSequenceNumber(int step6CloseRequestSequenceNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
+        }
+        if (!connected) {
+            log.trace("TCP connection was never made!");
+            return;
+        }
+        if (this.step4CloseRequestSequenceNumber == NOT_DEFINED) {
+            log.trace("step4CloseRequestSequenceNumber was not set!");
+            return;
+        }
+        if (this.step5CloseRequestAckNumber == NOT_DEFINED) {
+            log.trace("step5CloseRequestAckNumber was not set!");
+            return;
+        }
+        this.step6CloseRequestSequenceNumber = step6CloseRequestSequenceNumber;
+    }
+
+    public int getStep7CloseRequestAckNumber() {
+        return step7CloseRequestAckNumber;
+    }
+
+    public void setStep7CloseRequestAckNumber(int step7CloseRequestAckNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
+        }
+        if (!connected) {
+            log.trace("TCP connection was never made!");
+            return;
+        }
+        if (this.step4CloseRequestSequenceNumber == NOT_DEFINED) {
+            log.trace("step4CloseRequestSequenceNumber was not set!");
+            return;
+        }
+        if (this.step5CloseRequestAckNumber == NOT_DEFINED) {
+            log.trace("step5CloseRequestAckNumber was not set!");
+            return;
+        }
+        if (this.step6CloseRequestSequenceNumber == NOT_DEFINED) {
+            log.trace("step6CloseRequestSequenceNumber was not set!");
+            return;
+        }
+        this.step7CloseRequestAckNumber = step7CloseRequestAckNumber;
+        this.connectionClosed = Instant.now();
+        this.connected = false;
+        this.closed = true;
     }
 
     public boolean isConnected() {
         return connected;
+    }
+
+    // Mutators
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public Instant getConnectionEstablished() {
+        return connectionEstablished;
+    }
+
+    public Instant getConnectionClosed() {
+        return connectionClosed;
+    }
+
+    public long getTotalBytesInFlow() {
+        return totalBytesInFlow;
+    }
+
+    public void setStep1ClientSequenceNumber(int step1ClientSequenceNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
+        }
+        if (this.connected) {
+            log.trace("This connection was previously made!");
+            return;
+        }
+        this.step1ClientSequenceNumber = step1ClientSequenceNumber;
+    }
+
+    public void setStep2Numbers(int step2ServerAckNumber, int step2ServerSequenceNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
+        }
+        if (this.connected) {
+            log.trace("This connection was previously made!");
+            return;
+        }
+        if (step1ClientSequenceNumber == NOT_DEFINED) {
+            log.trace("Step 1 Client Sequence Number not yet set!");
+            return;
+        }
+        if (step2ServerAckNumber != (step1ClientSequenceNumber + 1)) {
+            log.trace("Step 2 Server Ack Number should be Step 1 Client Sequence Number + 1!" +
+                    "step1ClientSequenceNumber is: " + step1ClientSequenceNumber +
+                    "step2ServerAckNumber argument is: " + step2ServerAckNumber);
+            return;
+        }
+        this.step2ServerAckNumber = step2ServerAckNumber;
+        this.step2ServerSequenceNumber = step2ServerSequenceNumber;
+    }
+
+    public void setStep3Numbers(int step3ClientAckNumber, int step3ClientSequenceNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
+        }
+        if (this.connected) {
+            log.trace("This connection was previously made!");
+            return;
+        }
+        if (step1ClientSequenceNumber == NOT_DEFINED) {
+            log.trace("Step 1 Client Sequence Number not yet set!");
+            return;
+        }
+        if (step2ServerAckNumber == NOT_DEFINED) {
+            log.trace("Step 2 Server Ack Number not yet set!");
+            return;
+        }
+        if (step2ServerSequenceNumber == NOT_DEFINED) {
+            log.trace("Step 2 Server Sequence Number not yet set!");
+            return;
+        }
+        if (step3ClientAckNumber != (step2ServerSequenceNumber + 1)) {
+            log.trace("Step 3 Client Ack Number should be Step 2 Server Sequence Number + 1!" +
+                    "step2ServerSequenceNumber is: " + step2ServerSequenceNumber +
+                    "step3ClientAckNumber argument is: " + step3ClientAckNumber);
+            return;
+        }
+        if (step3ClientSequenceNumber != (step1ClientSequenceNumber + 1)) {
+            log.trace("Step 3 Client Sequence Number should be Step 1 Client Sequence Number + 1!" +
+                    "step1ClientSequenceNumber is: " + step1ClientSequenceNumber +
+                    "step3ClientSequenceNumber argument is: " + step3ClientSequenceNumber);
+            return;
+        }
+        this.step3ClientAckNumber = step3ClientAckNumber;
+        this.step3ClientSequenceNumber = step3ClientSequenceNumber;
+        this.connected = true;
+        this.connectionEstablished = Instant.now();
+    }
+
+    public void addFlowBytes(long additionalBytes) {
+        if (additionalBytes < 0) {
+            log.trace("additionalBytes must be non-negative!");
+            return;
+        }
+        this.totalBytesInFlow += additionalBytes;
     }
 }

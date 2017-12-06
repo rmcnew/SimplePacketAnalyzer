@@ -115,6 +115,19 @@ public class CommandLineValidator {
                 CommandLineOptions.printHelp();
                 System.exit(-3);
             }
+            // silent
+            if (commandLine.hasOption(CommandLineOptions.SILENT)) {
+                validatedArgs.silent = true;
+                if (validatedArgs.outputFile == null) {
+                    System.err.println("Silent and no output file means no output will occur.  You must specify an output file with silent!");
+                    CommandLineOptions.printHelp();
+                    System.exit(-4);
+                }
+            }
+            // verbose
+            if (commandLine.hasOption(CommandLineOptions.VERBOSE)) {
+                validatedArgs.verbose = true;
+            }
         } catch (ParseException e) {
             CommandLineOptions.printHelp();
             System.err.println("The error is:  " + e);

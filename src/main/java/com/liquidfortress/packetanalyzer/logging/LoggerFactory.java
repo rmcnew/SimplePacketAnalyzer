@@ -20,6 +20,7 @@
 
 package com.liquidfortress.packetanalyzer.logging;
 
+import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Logger;
@@ -30,8 +31,6 @@ import org.apache.logging.log4j.core.config.AppenderRef;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-
-import java.io.File;
 
 
 /**
@@ -44,17 +43,19 @@ public class LoggerFactory {
     private static final String CONSOLE_APPENDER = "CONSOLE_APPENDER";
     private static final String FILE_APPENDER = "FILE_APPENDER";
     private static final String LOGGER_NAME = "LFPA_LOGGER";
+    private static final Level DEFAULT_LEVEL = Level.INFO;
+    private static final Level VERBOSE_LEVEL = Level.TRACE;
 
     /**
      * Get the logger used for output
      *
-     * @param outputFile The file to use for output, or null for just console output
+     * @param validatedArgs with output file, silent, and verbose options that
+     *                      are used to configure the logger
      * @return Logger with dynamically-generated configuration
      */
-    public static Logger getLogger(File outputFile) {
+    public static Logger getLogger(ValidatedArgs validatedArgs) {
         // This approach is ugly, but it circumvents the need for multiple log4j
         // configuration files and simplifies writing results to the console and the output file
-
         // Silence StatusLogger
         System.setProperty("org.apache.logging.log4j.simplelog.StatusLogger.level", "FATAL");
         // Setup context
@@ -66,35 +67,49 @@ public class LoggerFactory {
                 .withPattern("%d{ISO8601} [%level] [%F:%L] %msg%n")
                 .build();
         // Add appenders
-        //// Always create console appender
-        ConsoleAppender consoleAppender = ConsoleAppender.newBuilder()
-                .setConfiguration(configuration)
-                .withLayout(patternLayout)
-                .withName(CONSOLE_APPENDER)
-                .build();
-        consoleAppender.start();
-        configuration.addAppender(consoleAppender);
         AppenderRef[] appenderRefs;
-        AppenderRef consoleAppenderRef = AppenderRef.createAppenderRef(CONSOLE_APPENDER, null, null);
+        //// Create console appender unless silent
+        ConsoleAppender consoleAppender = null;
+        AppenderRef consoleAppenderRef = null;
+        if (!validatedArgs.silent) {
+            consoleAppender = ConsoleAppender.newBuilder()
+                    .setConfiguration(configuration)
+                    .withLayout(patternLayout)
+                    .withName(CONSOLE_APPENDER)
+                    .build();
+            consoleAppender.start();
+            configuration.addAppender(consoleAppender);
+            consoleAppenderRef = AppenderRef.createAppenderRef(CONSOLE_APPENDER, null, null);
+        }
         //// Create file appender if output file specified
         FileAppender fileAppender = null;
-        if (outputFile != null) {
+        AppenderRef fileAppenderRef = null;
+        if (validatedArgs.outputFile != null) {
             fileAppender = FileAppender.newBuilder()
                     .setConfiguration(configuration)
                     .withLayout(patternLayout)
                     .withName(FILE_APPENDER)
-                    .withFileName(outputFile.getAbsolutePath())
+                    .withFileName(validatedArgs.outputFile.getAbsolutePath())
                     .build();
             fileAppender.start();
             configuration.addAppender(fileAppender);
-            AppenderRef fileAppenderRef = AppenderRef.createAppenderRef(FILE_APPENDER, null, null);
+            fileAppenderRef = AppenderRef.createAppenderRef(FILE_APPENDER, null, null);
+        }
+        if ((consoleAppenderRef != null) && (fileAppenderRef != null)) {
             appenderRefs = new AppenderRef[]{consoleAppenderRef, fileAppenderRef};
-        } else {
+        } else if (consoleAppenderRef != null) {
             appenderRefs = new AppenderRef[]{consoleAppenderRef};
+        } else if (fileAppenderRef != null) {
+            appenderRefs = new AppenderRef[]{fileAppenderRef};
+        } else {
+            throw new IllegalStateException("At least one appender must be configured to provide output!");
         }
         // Build and update the LoggerConfig
-        LoggerConfig loggerConfig = LoggerConfig.createLogger(false, Level.INFO, LOGGER_NAME, "true", appenderRefs, null, configuration, null);
-        loggerConfig.addAppender(consoleAppender, null, null);
+        Level levelToUse = validatedArgs.verbose ? VERBOSE_LEVEL : DEFAULT_LEVEL;
+        LoggerConfig loggerConfig = LoggerConfig.createLogger(false, levelToUse, LOGGER_NAME, "true", appenderRefs, null, configuration, null);
+        if (consoleAppender != null) {
+            loggerConfig.addAppender(consoleAppender, null, null);
+        }
         if (fileAppender != null) {
             loggerConfig.addAppender(fileAppender, null, null);
         }

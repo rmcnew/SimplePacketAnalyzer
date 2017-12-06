@@ -35,6 +35,8 @@ public class CommandLineOptions {
     public static final String MODE = "mode";
     public static final String OUTPUT_FILE = "output-file";
     public static final String INPUT_FILES = "input-files";
+    public static final String SILENT = "silent";
+    public static final String VERBOSE = "verbose";
     public static final String HELP = "help";
 
     private static final Options options = new Options();
@@ -99,6 +101,18 @@ public class CommandLineOptions {
                 .desc("Input files in tcpdump / pcap format")
                 .build();
         options.addOption(inputFiles);
+
+        Option silent = Option.builder("s")
+                .longOpt(SILENT)
+                .desc("Do not print output to the console")
+                .build();
+        options.addOption(silent);
+
+        Option verbose = Option.builder("v")
+                .longOpt(VERBOSE)
+                .desc("Generate verbose output")
+                .build();
+        options.addOption(verbose);
 
         Option help = Option.builder("h")
                 .longOpt(HELP)

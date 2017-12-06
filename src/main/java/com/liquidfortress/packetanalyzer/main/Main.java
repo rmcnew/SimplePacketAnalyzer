@@ -32,16 +32,13 @@ public class Main {
 
     public static void main(String[] args) {
         ValidatedArgs validatedArgs = CommandLineValidator.validateCommandLineArgs(args);
-        log = LoggerFactory.getLogger(validatedArgs.outputFile);
+        log = LoggerFactory.getLogger(validatedArgs);
 
-        log.info("Starting " + validatedArgs.mode.name() + " . . .");
+        log.trace("Starting " + validatedArgs.mode.name() + " . . .");
         switch (validatedArgs.mode) {
             case BASIC_ANALYSIS:
-                PcapFileProcessor.processPcapFiles(validatedArgs.inputFiles);
-                break;
-
             case DETAILED_ANALYSIS:
-
+                PcapFileProcessor.processPcapFiles(validatedArgs);
                 break;
 
             case POSSIBLE_ATTACKS_ANALYSIS:

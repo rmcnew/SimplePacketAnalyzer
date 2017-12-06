@@ -20,11 +20,10 @@
 
 package com.liquidfortress.packetanalyzer.pcap_file;
 
+import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
 import com.liquidfortress.packetanalyzer.ip.IpPacketProcessor;
 import com.liquidfortress.packetanalyzer.main.Main;
-import com.liquidfortress.packetanalyzer.statistics.UdpSources;
-import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
-import com.liquidfortress.packetanalyzer.tcp.TcpConnections;
+import com.liquidfortress.packetanalyzer.main.Mode;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
@@ -38,35 +37,33 @@ import org.pcap4j.packet.namednumber.EtherType;
 import org.pcap4j.util.MacAddress;
 
 import java.io.File;
-import java.util.List;
 
 public class PcapFileProcessor {
     private static Logger log = Main.log;
 
-    private static long nonIpPacketCount = 0;
 
-    public static void processEthernetPacket(Packet packet) {
+    public static void processEthernetPacket(Packet packet, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
-            log.info("Converting to ethernet packet");
+            log.trace("Converting to ethernet packet");
             EthernetPacket ethernetPacket = EthernetPacket.newPacket(packet.getRawData(), 0, packet.length());
             EthernetPacket.EthernetHeader ethernetHeader = ethernetPacket.getHeader();
             MacAddress sourceMac = ethernetHeader.getSrcAddr();
-            log.info("Source MAC: " + sourceMac);
+            log.trace("Source MAC: " + sourceMac);
             MacAddress destMac = ethernetHeader.getDstAddr();
-            log.info("Destination MAC: " + destMac);
+            log.trace("Destination MAC: " + destMac);
             EtherType etherType = ethernetHeader.getType();
-            log.info("EtherType: " + etherType.toString());
+            log.trace("EtherType: " + etherType.toString());
             Packet payload = ethernetPacket.getPayload();
             if (etherType == EtherType.IPV4) {
-                IpPacketProcessor.processIpv4Packet(payload);
+                IpPacketProcessor.processIpv4Packet(payload, pcapFileSummary);
             } else if (etherType == EtherType.IPV6) {
-                IpPacketProcessor.processIpv6Packet(payload);
+                IpPacketProcessor.processIpv6Packet(payload, pcapFileSummary);
             } else {
-                nonIpPacketCount++;
-                log.warn("Skipping packet with EtherType: " + etherType);
+                pcapFileSummary.nonIpPacketCount++;
+                log.trace("Skipping packet with EtherType: " + etherType);
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
@@ -74,35 +71,49 @@ public class PcapFileProcessor {
         }
     }
 
-    public static PcapFileSummary processPcapFile(File pcapFile) {
-        PcapFileSummary pcapFileSummary = new PcapFileSummary();
+    public static PcapFileSummary processPcapFile(File pcapFile, Mode mode) {
+        PcapFileSummary pcapFileSummary = new PcapFileSummary(pcapFile.getAbsolutePath());
         try {
-            log.info("Opening pcap file: " + pcapFile.getAbsolutePath());
+            log.trace("Opening pcap file: " + pcapFile.getAbsolutePath());
             PcapHandle pcapHandle = Pcaps.openOffline(pcapFile.getAbsolutePath());
             DataLinkType dataLinkType = pcapHandle.getDlt();
-            log.info("DataLinkType is: " + dataLinkType);
+            log.trace("DataLinkType is: " + dataLinkType);
             if (dataLinkType == DataLinkType.EN10MB) { // Ethernet
                 Packet packet;
                 for (packet = pcapHandle.getNextPacket(); packet != null; packet = pcapHandle.getNextPacket()) {
                     pcapFileSummary.packetCount++;
-                    log.info("======= Processing packet " + pcapFileSummary.packetCount + " =======");
-                    processEthernetPacket(packet);
+                    log.trace("======= Processing packet " + pcapFileSummary.packetCount + " =======");
+                    processEthernetPacket(packet, pcapFileSummary);
+                }
+                if (mode == Mode.BASIC_ANALYSIS) {
+                    printMode1Output(pcapFileSummary);
+                } else if (mode == Mode.DETAILED_ANALYSIS) {
+                    printMode1Output(pcapFileSummary);
+                    printMode2Output(pcapFileSummary);
                 }
             }
-            log.info("Unique IP addresses: " + UniqueIpAddresses.size());
-            log.info("TCP Handshakes: " + TcpConnections.size());
-            log.info("UDP Sources: " + UdpSources.size());
-            log.info("Non-IP Packet count: " + nonIpPacketCount);
-            log.info("Total Packet count: " + pcapFileSummary.packetCount);
         } catch (PcapNativeException | NotOpenException e) {
             log.error("Exception occurred while processing pcapFile: " + pcapFile + ".  Exception was: " + e);
         }
         return pcapFileSummary;
     }
 
-    public static void processPcapFiles(List<File> pcapFiles) {
-        for (File pcapFile : pcapFiles) {
-            processPcapFile(pcapFile);
+    public static void processPcapFiles(ValidatedArgs validatedArgs) {
+        for (File pcapFile : validatedArgs.inputFiles) {
+            processPcapFile(pcapFile, validatedArgs.mode);
         }
+    }
+
+    private static void printMode1Output(PcapFileSummary pcapFileSummary) {
+        log.info("==== Summary for: " + pcapFileSummary.filename + " ====");
+        log.info("Unique IP addresses: " + pcapFileSummary.uniqueIpAddresses.size());
+        log.info("TCP Handshakes: " + pcapFileSummary.tcpConnectionCount);
+        log.info("UDP Sources: " + pcapFileSummary.udpSources.size());
+        log.info("Non-IP Packet count: " + pcapFileSummary.nonIpPacketCount);
+        log.info("Total Packet count: " + pcapFileSummary.packetCount);
+    }
+
+    private static void printMode2Output(PcapFileSummary pcapFileSummary) {
+
     }
 }

@@ -30,17 +30,20 @@ import java.util.HashSet;
 public class UdpSources {
 
     // UDP sources are stored in "IP Address:port" format
-    private static HashSet<String> sources = new HashSet<>();
+    private HashSet<String> sources = new HashSet<>();
 
-    public static int size() {
+    public UdpSources() {
+    }
+
+    public int size() {
         return sources.size();
     }
 
-    public static boolean contains(Object o) {
+    public boolean contains(Object o) {
         return sources.contains(o);
     }
 
-    public static boolean add(String s) {
+    public boolean add(String s) {
         return sources.add(s);
     }
 }
