@@ -22,6 +22,8 @@ package com.liquidfortress.packetanalyzer.pcap_file;
 
 import com.liquidfortress.packetanalyzer.statistics.UdpSources;
 import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
+import com.liquidfortress.packetanalyzer.tcp.ActiveTcpConnections;
+import com.liquidfortress.packetanalyzer.tcp.ClosedTcpConnections;
 
 /**
  * PcapFileSummary
@@ -36,6 +38,8 @@ public class PcapFileSummary {
     public long tcpConnectionCount = 0;
     public UniqueIpAddresses uniqueIpAddresses = new UniqueIpAddresses();
     public UdpSources udpSources = new UdpSources();
+    public ActiveTcpConnections activeTcpConnections = new ActiveTcpConnections();
+    public ClosedTcpConnections closedTcpConnections = new ClosedTcpConnections();
 
     public PcapFileSummary(String filename) {
         this.filename = filename;

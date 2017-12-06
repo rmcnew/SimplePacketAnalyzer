@@ -20,6 +20,7 @@
 
 package com.liquidfortress.packetanalyzer.tcp;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -31,29 +32,33 @@ import java.util.Set;
  */
 public class ActiveTcpConnections {
 
-    private static HashMap<IpAddressPair, TcpConnectionTracker> connections = new HashMap<>();
+    private HashMap<IpAddressPair, TcpConnectionTracker> connections = new HashMap<>();
 
-    public static int size() {
+    public int size() {
         return connections.size();
     }
 
-    public static TcpConnectionTracker get(Object o) {
+    public TcpConnectionTracker get(Object o) {
         return connections.get(o);
     }
 
-    public static TcpConnectionTracker put(IpAddressPair ipAddressPair, TcpConnectionTracker tcpConnectionTracker) {
+    public TcpConnectionTracker put(IpAddressPair ipAddressPair, TcpConnectionTracker tcpConnectionTracker) {
         return connections.put(ipAddressPair, tcpConnectionTracker);
     }
 
-    public static Set<IpAddressPair> keySet() {
+    public Set<IpAddressPair> keySet() {
         return connections.keySet();
     }
 
-    public static Set<Map.Entry<IpAddressPair, TcpConnectionTracker>> entrySet() {
+    public Collection<TcpConnectionTracker> values() {
+        return connections.values();
+    }
+
+    public Set<Map.Entry<IpAddressPair, TcpConnectionTracker>> entrySet() {
         return connections.entrySet();
     }
 
-    public static TcpConnectionTracker remove(Object o) {
+    public TcpConnectionTracker remove(Object o) {
         return connections.remove(o);
     }
 }

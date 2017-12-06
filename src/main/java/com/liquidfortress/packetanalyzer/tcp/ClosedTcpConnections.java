@@ -22,6 +22,7 @@ package com.liquidfortress.packetanalyzer.tcp;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -32,29 +33,29 @@ import java.util.stream.Stream;
  */
 public class ClosedTcpConnections {
 
-    private static final LinkedList<TcpConnectionTracker> closedConnections = new LinkedList<>();
+    private final LinkedList<TcpConnectionTracker> closedConnections = new LinkedList<>();
 
-    public static int size() {
-        return closedConnections.size();
-    }
-
-    public static boolean add(TcpConnectionTracker tcpConnectionTracker) {
+    public boolean add(TcpConnectionTracker tcpConnectionTracker) {
         return closedConnections.add(tcpConnectionTracker);
     }
 
-    public static Iterator<TcpConnectionTracker> iterator() {
+    public int size() {
+        return closedConnections.size();
+    }
+
+    public Iterator<TcpConnectionTracker> iterator() {
         return closedConnections.iterator();
     }
 
-    public static Stream<TcpConnectionTracker> stream() {
+    public ListIterator<TcpConnectionTracker> listIterator() {
+        return closedConnections.listIterator();
+    }
+
+    public Stream<TcpConnectionTracker> stream() {
         return closedConnections.stream();
     }
 
-    public static Stream<TcpConnectionTracker> parallelStream() {
-        return closedConnections.parallelStream();
-    }
-
-    public static void forEach(Consumer<? super TcpConnectionTracker> consumer) {
+    public void forEach(Consumer<? super TcpConnectionTracker> consumer) {
         closedConnections.forEach(consumer);
     }
 }

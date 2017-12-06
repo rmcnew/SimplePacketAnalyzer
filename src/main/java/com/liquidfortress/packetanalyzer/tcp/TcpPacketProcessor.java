@@ -51,20 +51,20 @@ public class TcpPacketProcessor {
             boolean syn = tcpHeader.getSyn();
             boolean ack = tcpHeader.getAck();
             boolean fin = tcpHeader.getFin();
-            int sequenceNumber = tcpHeader.getSequenceNumber();
-            int acknowledgementNumber = tcpHeader.getAcknowledgmentNumber();
+            long sequenceNumber = tcpHeader.getSequenceNumberAsLong();
+            long acknowledgementNumber = tcpHeader.getAcknowledgmentNumberAsLong();
             log.trace("TCP{ source: " + tcpSource + ", destination: " + tcpDestination +
                     ", SYN: " + syn + ", ACK: " + ack + ", FIN: " + fin +
                     ", seq number: " + sequenceNumber + ", ack number: " + acknowledgementNumber + " }");
             // Track TCP connection state
             IpAddressPair addressPair = new IpAddressPair(tcpSource, tcpDestination);
-            TcpConnectionTracker tcpConnectionTracker = ActiveTcpConnections.get(addressPair);
+            TcpConnectionTracker tcpConnectionTracker = pcapFileSummary.activeTcpConnections.get(addressPair);
             if (tcpConnectionTracker == null) {
                 tcpConnectionTracker = new TcpConnectionTracker(tcpSource, tcpDestination);
                 if (syn) { // step 1: Client SYN
                     tcpConnectionTracker.setStep1ClientSequenceNumber(sequenceNumber);
                     tcpConnectionTracker.addFlowBytes((long) packet.length());
-                    ActiveTcpConnections.put(addressPair, tcpConnectionTracker);
+                    pcapFileSummary.activeTcpConnections.put(addressPair, tcpConnectionTracker);
                 }
             } else if (!tcpConnectionTracker.isConnected() && !tcpConnectionTracker.isClosed()) {
                 if (syn && ack) { // step 2: Server SYN-ACK
@@ -108,8 +108,8 @@ public class TcpPacketProcessor {
                     tcpConnectionTracker.setStep7CloseRequestAckNumber(acknowledgementNumber);
                     tcpConnectionTracker.addFlowBytes((long) packet.length());
                     // remove the closed TCP connection from tracking
-                    ClosedTcpConnections.add(tcpConnectionTracker);
-                    ActiveTcpConnections.remove(addressPair);
+                    pcapFileSummary.closedTcpConnections.add(tcpConnectionTracker);
+                    pcapFileSummary.activeTcpConnections.remove(addressPair);
                 } else { // add to flow tracking
                     tcpConnectionTracker.addFlowBytes((long) packet.length());
                 }

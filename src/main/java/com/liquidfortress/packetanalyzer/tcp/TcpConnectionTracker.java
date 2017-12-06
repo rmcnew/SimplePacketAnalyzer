@@ -23,8 +23,6 @@ package com.liquidfortress.packetanalyzer.tcp;
 import com.liquidfortress.packetanalyzer.main.Main;
 import org.apache.logging.log4j.core.Logger;
 
-import java.time.Instant;
-
 /**
  * TcpConnectionTracker
  * <p/>
@@ -36,19 +34,17 @@ public class TcpConnectionTracker {
     private final String clientAddress;
     private final String serverAddress;
 
-    private int step1ClientSequenceNumber = NOT_DEFINED; // chosen by client
-    private int step2ServerAckNumber = NOT_DEFINED;      // should be step1ClientSequenceNumber + 1
-    private int step2ServerSequenceNumber = NOT_DEFINED; // chosen by server
-    private int step3ClientSequenceNumber = NOT_DEFINED; // should be step1ClientSequenceNumber + 1
-    private int step3ClientAckNumber = NOT_DEFINED;      // should be step2ServerSequenceNumber + 1
-    private int step4CloseRequestSequenceNumber = NOT_DEFINED;
-    private int step5CloseRequestAckNumber = NOT_DEFINED;
-    private int step6CloseRequestSequenceNumber = NOT_DEFINED;
-    private int step7CloseRequestAckNumber = NOT_DEFINED;
+    private long step1ClientSequenceNumber = NOT_DEFINED; // chosen by client
+    private long step2ServerAckNumber = NOT_DEFINED;      // should be step1ClientSequenceNumber + 1
+    private long step2ServerSequenceNumber = NOT_DEFINED; // chosen by server
+    private long step3ClientSequenceNumber = NOT_DEFINED; // should be step1ClientSequenceNumber + 1
+    private long step3ClientAckNumber = NOT_DEFINED;      // should be step2ServerSequenceNumber + 1
+    private long step4CloseRequestSequenceNumber = NOT_DEFINED;
+    private long step5CloseRequestAckNumber = NOT_DEFINED;
+    private long step6CloseRequestSequenceNumber = NOT_DEFINED;
+    private long step7CloseRequestAckNumber = NOT_DEFINED;
     private boolean connected = false;  // only true if the connection has been established and is open
     private boolean closed = false; // only true after the connection has been closed
-    private Instant connectionEstablished;
-    private Instant connectionClosed;
     private long totalBytesInFlow = 0;
 
     public TcpConnectionTracker(String clientAddress, String serverAddress) {
@@ -66,31 +62,43 @@ public class TcpConnectionTracker {
         return serverAddress;
     }
 
-    public int getStep1ClientSequenceNumber() {
+    public long getStep1ClientSequenceNumber() {
         return step1ClientSequenceNumber;
     }
 
-    public int getStep2ServerAckNumber() {
+    public void setStep1ClientSequenceNumber(long step1ClientSequenceNumber) {
+        if (this.closed) {
+            log.trace("This connection was previously closed!");
+            return;
+        }
+        if (this.connected) {
+            log.trace("This connection was previously made!");
+            return;
+        }
+        this.step1ClientSequenceNumber = step1ClientSequenceNumber;
+    }
+
+    public long getStep2ServerAckNumber() {
         return step2ServerAckNumber;
     }
 
-    public int getStep2ServerSequenceNumber() {
+    public long getStep2ServerSequenceNumber() {
         return step2ServerSequenceNumber;
     }
 
-    public int getStep3ClientSequenceNumber() {
+    public long getStep3ClientSequenceNumber() {
         return step3ClientSequenceNumber;
     }
 
-    public int getStep3ClientAckNumber() {
+    public long getStep3ClientAckNumber() {
         return step3ClientAckNumber;
     }
 
-    public int getStep4CloseRequestSequenceNumber() {
+    public long getStep4CloseRequestSequenceNumber() {
         return step4CloseRequestSequenceNumber;
     }
 
-    public void setStep4CloseRequestSequenceNumber(int step4CloseRequestSequenceNumber) {
+    public void setStep4CloseRequestSequenceNumber(long step4CloseRequestSequenceNumber) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -102,11 +110,11 @@ public class TcpConnectionTracker {
         this.step4CloseRequestSequenceNumber = step4CloseRequestSequenceNumber;
     }
 
-    public int getStep5CloseRequestAckNumber() {
+    public long getStep5CloseRequestAckNumber() {
         return step5CloseRequestAckNumber;
     }
 
-    public void setStep5CloseRequestAckNumber(int step5CloseRequestAckNumber) {
+    public void setStep5CloseRequestAckNumber(long step5CloseRequestAckNumber) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -122,11 +130,11 @@ public class TcpConnectionTracker {
         this.step5CloseRequestAckNumber = step5CloseRequestAckNumber;
     }
 
-    public int getStep6CloseRequestSequenceNumber() {
+    public long getStep6CloseRequestSequenceNumber() {
         return step6CloseRequestSequenceNumber;
     }
 
-    public void setStep6CloseRequestSequenceNumber(int step6CloseRequestSequenceNumber) {
+    public void setStep6CloseRequestSequenceNumber(long step6CloseRequestSequenceNumber) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -146,11 +154,25 @@ public class TcpConnectionTracker {
         this.step6CloseRequestSequenceNumber = step6CloseRequestSequenceNumber;
     }
 
-    public int getStep7CloseRequestAckNumber() {
+    public long getStep7CloseRequestAckNumber() {
         return step7CloseRequestAckNumber;
     }
 
-    public void setStep7CloseRequestAckNumber(int step7CloseRequestAckNumber) {
+    public boolean isConnected() {
+        return connected;
+    }
+
+    // Mutators
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public long getTotalBytesInFlow() {
+        return totalBytesInFlow;
+    }
+
+    public void setStep7CloseRequestAckNumber(long step7CloseRequestAckNumber) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -172,46 +194,11 @@ public class TcpConnectionTracker {
             return;
         }
         this.step7CloseRequestAckNumber = step7CloseRequestAckNumber;
-        this.connectionClosed = Instant.now();
         this.connected = false;
         this.closed = true;
     }
 
-    public boolean isConnected() {
-        return connected;
-    }
-
-    // Mutators
-
-    public boolean isClosed() {
-        return closed;
-    }
-
-    public Instant getConnectionEstablished() {
-        return connectionEstablished;
-    }
-
-    public Instant getConnectionClosed() {
-        return connectionClosed;
-    }
-
-    public long getTotalBytesInFlow() {
-        return totalBytesInFlow;
-    }
-
-    public void setStep1ClientSequenceNumber(int step1ClientSequenceNumber) {
-        if (this.closed) {
-            log.trace("This connection was previously closed!");
-            return;
-        }
-        if (this.connected) {
-            log.trace("This connection was previously made!");
-            return;
-        }
-        this.step1ClientSequenceNumber = step1ClientSequenceNumber;
-    }
-
-    public void setStep2Numbers(int step2ServerAckNumber, int step2ServerSequenceNumber) {
+    public void setStep2Numbers(long step2ServerAckNumber, long step2ServerSequenceNumber) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -234,7 +221,7 @@ public class TcpConnectionTracker {
         this.step2ServerSequenceNumber = step2ServerSequenceNumber;
     }
 
-    public void setStep3Numbers(int step3ClientAckNumber, int step3ClientSequenceNumber) {
+    public void setStep3Numbers(long step3ClientAckNumber, long step3ClientSequenceNumber) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -270,7 +257,6 @@ public class TcpConnectionTracker {
         this.step3ClientAckNumber = step3ClientAckNumber;
         this.step3ClientSequenceNumber = step3ClientSequenceNumber;
         this.connected = true;
-        this.connectionEstablished = Instant.now();
     }
 
     public void addFlowBytes(long additionalBytes) {
@@ -279,5 +265,21 @@ public class TcpConnectionTracker {
             return;
         }
         this.totalBytesInFlow += additionalBytes;
+    }
+
+    public String toString() {
+        return "TCP Flow Details: " + clientAddress + " => " + serverAddress + "\n" +
+                "=== Connection Establishment Handshake Details ===\n" +
+                "Client SYN Sequence Number: " + step1ClientSequenceNumber + "\n" +
+                "Server SYN-ACK Acknowledge Number: " + step2ServerAckNumber + "\n" +
+                "Server SYN-ACK Sequence Number: " + step2ServerSequenceNumber + "\n" +
+                "Client ACK Acknowledge Number: " + step3ClientAckNumber + "\n" +
+                "Client ACK Sequence Number: " + step3ClientSequenceNumber + "\n" +
+                "=== Connection Termination Details ===\n" +
+                "Initiator FIN Sequence Number: " + step4CloseRequestSequenceNumber + "\n" +
+                "Receiver ACK Acknowledge Number: " + step5CloseRequestAckNumber + "\n" +
+                "Receiver FIN Sequence Number: " + step6CloseRequestSequenceNumber + "\n" +
+                "Initiator ACK Acknowledge Number: " + step7CloseRequestAckNumber + "\n" +
+                "=== Total Bytes in Flow: " + totalBytesInFlow + " ===\n";
     }
 }

@@ -24,6 +24,7 @@ import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
 import com.liquidfortress.packetanalyzer.ip.IpPacketProcessor;
 import com.liquidfortress.packetanalyzer.main.Main;
 import com.liquidfortress.packetanalyzer.main.Mode;
+import com.liquidfortress.packetanalyzer.tcp.TcpConnectionTracker;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
@@ -114,6 +115,13 @@ public class PcapFileProcessor {
     }
 
     private static void printMode2Output(PcapFileSummary pcapFileSummary) {
-
+        log.info("==== Completed TCP Connections (open and closed) ====");
+        pcapFileSummary.closedTcpConnections.forEach((TcpConnectionTracker tracker) -> {
+            log.info(tracker.toString());
+        });
+        log.info("==== Opened TCP Connections (opened but not closed) ====");
+        pcapFileSummary.activeTcpConnections.values().forEach((TcpConnectionTracker tracker) -> {
+            log.info(tracker.toString());
+        });
     }
 }
