@@ -22,6 +22,7 @@ package com.liquidfortress.packetanalyzer.ip;
 
 import com.liquidfortress.packetanalyzer.icmp.IcmpPacketProcessor;
 import com.liquidfortress.packetanalyzer.main.Main;
+import com.liquidfortress.packetanalyzer.main.Mode;
 import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import com.liquidfortress.packetanalyzer.tcp.TcpPacketProcessor;
 import com.liquidfortress.packetanalyzer.udp.UdpPacketProcessor;
@@ -31,6 +32,7 @@ import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.IpV6Packet;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.IpNumber;
+import org.pcap4j.util.MacAddress;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -44,7 +46,7 @@ public class IpPacketProcessor {
     private static Logger log = Main.log;
 
 
-    public static void processIpv4Packet(Packet packet, PcapFileSummary pcapFileSummary) {
+    public static void processIpv4Packet(Packet packet, PcapFileSummary pcapFileSummary, Mode mode, MacAddress sourceMac) {
         if (packet == null) {
             return; // skip empty packets
         }
@@ -54,6 +56,9 @@ public class IpPacketProcessor {
             IpV4Packet.IpV4Header ipV4Header = ipV4Packet.getHeader();
             Inet4Address sourceAddress = ipV4Header.getSrcAddr();
             Inet4Address destAddress = ipV4Header.getDstAddr();
+            if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
+            }
             log.trace("Adding IPv4 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());
@@ -77,7 +82,7 @@ public class IpPacketProcessor {
         }
     }
 
-    public static void processIpv6Packet(Packet packet, PcapFileSummary pcapFileSummary) {
+    public static void processIpv6Packet(Packet packet, PcapFileSummary pcapFileSummary, Mode mode, MacAddress sourceMac) {
         if (packet == null) {
             return; // skip empty packets
         }
@@ -87,6 +92,9 @@ public class IpPacketProcessor {
             IpV6Packet.IpV6Header ipV6Header = ipV6Packet.getHeader();
             Inet6Address sourceAddress = ipV6Header.getSrcAddr();
             Inet6Address destAddress = ipV6Header.getDstAddr();
+            if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
+            }
             log.trace("Adding IPv6 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());

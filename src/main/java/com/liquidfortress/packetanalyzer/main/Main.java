@@ -33,20 +33,13 @@ public class Main {
 
     public static void main(String[] args) {
         System.setErr(SystemErrEater.getEater());
+        // validate command line args
         ValidatedArgs validatedArgs = CommandLineValidator.validateCommandLineArgs(args);
+        // prepare requested output formats
         log = LoggerFactory.getLogger(validatedArgs);
-
         log.trace("Starting " + validatedArgs.mode.name() + " . . .");
-        switch (validatedArgs.mode) {
-            case BASIC_ANALYSIS:
-            case DETAILED_ANALYSIS:
-                PcapFileProcessor.processPcapFiles(validatedArgs);
-                break;
-
-            case POSSIBLE_ATTACKS_ANALYSIS:
-
-                break;
-        }
+        // process specified files
+        PcapFileProcessor.processPcapFiles(validatedArgs);
     }
 
 }

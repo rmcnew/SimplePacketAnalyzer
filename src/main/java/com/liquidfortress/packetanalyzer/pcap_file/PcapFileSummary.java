@@ -20,6 +20,7 @@
 
 package com.liquidfortress.packetanalyzer.pcap_file;
 
+import com.liquidfortress.packetanalyzer.arp.IpMacTracker;
 import com.liquidfortress.packetanalyzer.statistics.IpProtocolCounter;
 import com.liquidfortress.packetanalyzer.statistics.UdpSources;
 import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
@@ -37,11 +38,12 @@ public class PcapFileSummary {
     public long packetCount = 0;
     public long nonIpPacketCount = 0;
     public long tcpConnectionCount = 0;
-    public UniqueIpAddresses uniqueIpAddresses = new UniqueIpAddresses();
-    public UdpSources udpSources = new UdpSources();
-    public ActiveTcpConnections activeTcpConnections = new ActiveTcpConnections();
-    public ClosedTcpConnections closedTcpConnections = new ClosedTcpConnections();
-    public IpProtocolCounter ipProtocolCounter = new IpProtocolCounter();
+    public final UniqueIpAddresses uniqueIpAddresses = new UniqueIpAddresses();
+    public final UdpSources udpSources = new UdpSources();
+    public final ActiveTcpConnections activeTcpConnections = new ActiveTcpConnections();
+    public final ClosedTcpConnections closedTcpConnections = new ClosedTcpConnections();
+    public final IpProtocolCounter ipProtocolCounter = new IpProtocolCounter();
+    public final IpMacTracker ipMacTracker = new IpMacTracker();
 
     public PcapFileSummary(String filename) {
         this.filename = filename;

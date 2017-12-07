@@ -20,6 +20,7 @@
 
 package com.liquidfortress.packetanalyzer.pcap_file;
 
+import com.liquidfortress.packetanalyzer.arp.ArpPacketProcessor;
 import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
 import com.liquidfortress.packetanalyzer.ip.IpPacketProcessor;
 import com.liquidfortress.packetanalyzer.main.Main;
@@ -38,12 +39,13 @@ import org.pcap4j.packet.namednumber.EtherType;
 import org.pcap4j.util.MacAddress;
 
 import java.io.File;
+import java.sql.Timestamp;
 
 public class PcapFileProcessor {
     private static Logger log = Main.log;
 
 
-    public static void processEthernetPacket(Packet packet, PcapFileSummary pcapFileSummary) {
+    public static void processEthernetPacket(Packet packet, PcapFileSummary pcapFileSummary, Mode mode) {
         if (packet == null) {
             return; // skip empty packets
         }
@@ -59,9 +61,12 @@ public class PcapFileProcessor {
             log.trace("EtherType: " + etherType.toString());
             Packet payload = ethernetPacket.getPayload();
             if (etherType == EtherType.IPV4) {
-                IpPacketProcessor.processIpv4Packet(payload, pcapFileSummary);
+                IpPacketProcessor.processIpv4Packet(payload, pcapFileSummary, mode, sourceMac);
             } else if (etherType == EtherType.IPV6) {
-                IpPacketProcessor.processIpv6Packet(payload, pcapFileSummary);
+                IpPacketProcessor.processIpv6Packet(payload, pcapFileSummary, mode, sourceMac);
+            } else if ((mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) && (etherType == EtherType.ARP)) {
+                pcapFileSummary.nonIpPacketCount++;
+                ArpPacketProcessor.processArpPacket(payload, pcapFileSummary);
             } else {
                 pcapFileSummary.nonIpPacketCount++;
                 log.trace("Skipping packet with EtherType: " + etherType);
@@ -81,16 +86,21 @@ public class PcapFileProcessor {
             log.trace("DataLinkType is: " + dataLinkType);
             if (dataLinkType == DataLinkType.EN10MB) { // Ethernet
                 Packet packet;
+                Timestamp timestamp;
                 for (packet = pcapHandle.getNextPacket(); packet != null; packet = pcapHandle.getNextPacket()) {
+                    timestamp = pcapHandle.getTimestamp();
                     pcapFileSummary.packetCount++;
                     log.trace("======= Processing packet " + pcapFileSummary.packetCount + " =======");
-                    processEthernetPacket(packet, pcapFileSummary);
+                    log.trace("Packet capture timestamp: " + timestamp);
+                    processEthernetPacket(packet, pcapFileSummary, mode);
                 }
                 if (mode == Mode.BASIC_ANALYSIS) {
                     printMode1Output(pcapFileSummary);
                 } else if (mode == Mode.DETAILED_ANALYSIS) {
                     printMode1Output(pcapFileSummary);
                     printMode2Output(pcapFileSummary);
+                } else if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                    printMode3Output(pcapFileSummary);
                 }
             }
         } catch (PcapNativeException | NotOpenException e) {
@@ -124,5 +134,9 @@ public class PcapFileProcessor {
             log.info(tracker.toString());
         });
         log.info(pcapFileSummary.ipProtocolCounter.toString());
+    }
+
+    private static void printMode3Output(PcapFileSummary pcapFileSummary) {
+        log.info("==== Possible Attack Summary for: " + pcapFileSummary.filename + " ====");
     }
 }
