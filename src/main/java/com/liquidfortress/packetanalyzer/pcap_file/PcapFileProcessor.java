@@ -123,5 +123,6 @@ public class PcapFileProcessor {
         pcapFileSummary.activeTcpConnections.values().forEach((TcpConnectionTracker tracker) -> {
             log.info(tracker.toString());
         });
+        log.info(pcapFileSummary.ipProtocolCounter.toString());
     }
 }

@@ -58,6 +58,7 @@ public class IpPacketProcessor {
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());
             IpNumber ipNumber = ipV4Header.getProtocol();
+            pcapFileSummary.ipProtocolCounter.increment(ipNumber);
             Packet payload = ipV4Packet.getPayload();
             if (ipNumber == IpNumber.ICMPV4) {
                 IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
@@ -90,6 +91,7 @@ public class IpPacketProcessor {
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());
             IpNumber ipNumber = ipV6Header.getProtocol();
+            pcapFileSummary.ipProtocolCounter.increment(ipNumber);
             Packet payload = ipV6Packet.getPayload();
             if (ipNumber == IpNumber.ICMPV4) {
                 IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);

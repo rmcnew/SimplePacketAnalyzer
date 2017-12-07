@@ -268,18 +268,36 @@ public class TcpConnectionTracker {
     }
 
     public String toString() {
-        return "TCP Flow Details: " + clientAddress + " => " + serverAddress + "\n" +
-                "=== Connection Establishment Handshake Details ===\n" +
-                "Client SYN Sequence Number: " + step1ClientSequenceNumber + "\n" +
-                "Server SYN-ACK Acknowledge Number: " + step2ServerAckNumber + "\n" +
-                "Server SYN-ACK Sequence Number: " + step2ServerSequenceNumber + "\n" +
-                "Client ACK Acknowledge Number: " + step3ClientAckNumber + "\n" +
-                "Client ACK Sequence Number: " + step3ClientSequenceNumber + "\n" +
-                "=== Connection Termination Details ===\n" +
-                "Initiator FIN Sequence Number: " + step4CloseRequestSequenceNumber + "\n" +
-                "Receiver ACK Acknowledge Number: " + step5CloseRequestAckNumber + "\n" +
-                "Receiver FIN Sequence Number: " + step6CloseRequestSequenceNumber + "\n" +
-                "Initiator ACK Acknowledge Number: " + step7CloseRequestAckNumber + "\n" +
-                "=== Total Bytes in Flow: " + totalBytesInFlow + " ===\n";
+        StringBuilder builder = new StringBuilder();
+        builder.append("TCP Flow Details: " + clientAddress + " => " + serverAddress + "\n");
+        builder.append("=== Connection Establishment Handshake Details ===\n");
+        builder.append("Client SYN Sequence Number: " + step1ClientSequenceNumber + "\n");
+        builder.append("Server SYN-ACK Acknowledge Number: " + step2ServerAckNumber + "\n");
+        builder.append("Server SYN-ACK Sequence Number: " + step2ServerSequenceNumber + "\n");
+        builder.append("Client ACK Acknowledge Number: " + step3ClientAckNumber + "\n");
+        builder.append("Client ACK Sequence Number: " + step3ClientSequenceNumber + "\n");
+        builder.append("=== Connection Termination Details ===\n");
+        if (step4CloseRequestSequenceNumber != NOT_DEFINED) {
+            builder.append("Initiator FIN Sequence Number: " + step4CloseRequestSequenceNumber + "\n");
+        } else {
+            builder.append("Initiator FIN Sequence Number: TCP Connection Not Closed\n");
+        }
+        if (step5CloseRequestAckNumber != NOT_DEFINED) {
+            builder.append("Receiver ACK Acknowledge Number: " + step5CloseRequestAckNumber + "\n");
+        } else {
+            builder.append("Receiver ACK Acknowledge Number: TCP Connection Not Closed\n");
+        }
+        if (step6CloseRequestSequenceNumber != NOT_DEFINED) {
+            builder.append("Receiver FIN Sequence Number: " + step6CloseRequestSequenceNumber + "\n");
+        } else {
+            builder.append("Receiver FIN Sequence Number: TCP Connection Not Closed\n");
+        }
+        if (step7CloseRequestAckNumber != NOT_DEFINED) {
+            builder.append("Initiator ACK Acknowledge Number: " + step7CloseRequestAckNumber + "\n");
+        } else {
+            builder.append("Initiator ACK Acknowledge Number: TCP Connection Not Closed\n");
+        }
+        builder.append("=== Total Bytes in Flow: " + totalBytesInFlow + " ===\n");
+        return builder.toString();
     }
 }
