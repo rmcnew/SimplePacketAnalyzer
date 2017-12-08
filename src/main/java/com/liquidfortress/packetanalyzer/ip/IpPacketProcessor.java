@@ -57,7 +57,7 @@ public class IpPacketProcessor {
             Inet4Address sourceAddress = ipV4Header.getSrcAddr();
             Inet4Address destAddress = ipV4Header.getDstAddr();
             if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
-                pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
+                //pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
             }
             log.trace("Adding IPv4 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
@@ -93,7 +93,7 @@ public class IpPacketProcessor {
             Inet6Address sourceAddress = ipV6Header.getSrcAddr();
             Inet6Address destAddress = ipV6Header.getDstAddr();
             if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
-                pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
+                //pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
             }
             log.trace("Adding IPv6 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());

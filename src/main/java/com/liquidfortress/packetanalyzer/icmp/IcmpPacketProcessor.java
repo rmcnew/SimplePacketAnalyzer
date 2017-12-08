@@ -35,12 +35,24 @@ import org.pcap4j.packet.namednumber.IcmpV6Type;
 public class IcmpPacketProcessor {
     private static Logger log = Main.log;
 
+    private final static int MAX_PING_LENGTH = 65515;  // bytes
+    private final static int MAX_PING_PAYLOAD = 65507; // bytes
+
     public static void processIcmpv4Packet(Packet packet, String sourceAddress, String destinationAddress, PcapFileSummary pcapFileSummary) {
         if (packet == null) {
             return; // skip empty packets
         }
         try {
             log.trace("Converting to ICMPv4 packet");
+            /*
+            if ( (packet.getRawData() == null) || (packet.getRawData().length > MAX_PING_LENGTH) ||
+                         ((packet.getPayload() != null) && (packet.getPayload().getRawData() != null) &&
+                         (packet.getPayload().getRawData().length > MAX_PING_PAYLOAD)) ) {
+                log.info("*** PING OF DEATH detected! \nICMPv4_ECHO_REQUEST{ source: " +
+                        sourceAddress + ", destination: " + destinationAddress + "}\n");
+                return;
+            }
+            */
             IcmpV4CommonPacket icmpV4CommonPacket = IcmpV4CommonPacket.newPacket(packet.getRawData(), 0, packet.length());
             IcmpV4CommonPacket.IcmpV4CommonHeader icmpV4CommonHeader = icmpV4CommonPacket.getHeader();
             IcmpV4Type icmpV4Type = icmpV4CommonHeader.getType();

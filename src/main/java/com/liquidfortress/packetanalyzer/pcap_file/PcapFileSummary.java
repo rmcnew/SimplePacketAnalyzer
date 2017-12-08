@@ -27,6 +27,8 @@ import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
 import com.liquidfortress.packetanalyzer.tcp.ActiveTcpConnections;
 import com.liquidfortress.packetanalyzer.tcp.ClosedTcpConnections;
 
+import java.util.LinkedList;
+
 /**
  * PcapFileSummary
  * <p/>
@@ -44,6 +46,7 @@ public class PcapFileSummary {
     public final ClosedTcpConnections closedTcpConnections = new ClosedTcpConnections();
     public final IpProtocolCounter ipProtocolCounter = new IpProtocolCounter();
     public final IpMacTracker ipMacTracker = new IpMacTracker();
+    public final LinkedList<AttackSummary> attackSummaries = new LinkedList<>();
 
     public PcapFileSummary(String filename) {
         this.filename = filename;

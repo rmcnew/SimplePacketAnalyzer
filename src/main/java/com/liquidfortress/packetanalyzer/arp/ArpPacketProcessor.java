@@ -54,7 +54,7 @@ public class ArpPacketProcessor {
 
             if (arpOperation == ArpOperation.REQUEST) {
                 // only add / check the source addresses for an ARP request
-                IpMacTrackerResult result = pcapFileSummary.ipMacTracker.query(sourceIp.getHostAddress(), sourceMac.toString());
+                //IpMacTrackerResult result = pcapFileSummary.ipMacTracker.query(sourceIp.getHostAddress(), sourceMac.toString());
             }
 
         } catch (IllegalRawDataException e) {

@@ -24,7 +24,6 @@ import com.liquidfortress.packetanalyzer.cli_args.CommandLineValidator;
 import com.liquidfortress.packetanalyzer.cli_args.ValidatedArgs;
 import com.liquidfortress.packetanalyzer.logging.LoggerFactory;
 import com.liquidfortress.packetanalyzer.pcap_file.PcapFileProcessor;
-import com.liquidfortress.packetanalyzer.util.SystemErrEater;
 import org.apache.logging.log4j.core.Logger;
 
 public class Main {
@@ -32,7 +31,7 @@ public class Main {
     public static Logger log;
 
     public static void main(String[] args) {
-        System.setErr(SystemErrEater.getEater());
+        //System.setErr(SystemErrEater.getEater());
         // validate command line args
         ValidatedArgs validatedArgs = CommandLineValidator.validateCommandLineArgs(args);
         // prepare requested output formats

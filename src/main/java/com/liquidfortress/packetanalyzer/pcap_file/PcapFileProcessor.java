@@ -137,6 +137,9 @@ public class PcapFileProcessor {
     }
 
     private static void printMode3Output(PcapFileSummary pcapFileSummary) {
-        log.info("==== Possible Attack Summary for: " + pcapFileSummary.filename + " ====");
+        log.info("==== Attack Summary for: " + pcapFileSummary.filename + " ====");
+        pcapFileSummary.attackSummaries.forEach((AttackSummary attackSummary) -> {
+            log.info(attackSummary.toString());
+        });
     }
 }
