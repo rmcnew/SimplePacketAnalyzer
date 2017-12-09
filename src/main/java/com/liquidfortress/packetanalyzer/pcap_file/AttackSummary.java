@@ -20,7 +20,6 @@
 
 package com.liquidfortress.packetanalyzer.pcap_file;
 
-import java.sql.Timestamp;
 import java.util.LinkedList;
 
 /**
@@ -33,8 +32,8 @@ public class AttackSummary {
     private String attackName;
     private String sourceIpAndPort;
     private LinkedList<String> targetIpAndPorts = new LinkedList<>();
-    private Timestamp startTimestamp;
-    private Timestamp endTimestamp;
+    private String startTimestamp;
+    private String endTimestamp;
     private LinkedList<String> usernameAndPasswords = new LinkedList<>();
 
     public AttackSummary() {
@@ -64,19 +63,19 @@ public class AttackSummary {
         this.targetIpAndPorts = targetIpAndPorts;
     }
 
-    public Timestamp getStartTimestamp() {
+    public String getStartTimestamp() {
         return startTimestamp;
     }
 
-    public void setStartTimestamp(Timestamp startTimestamp) {
+    public void setStartTimestamp(String startTimestamp) {
         this.startTimestamp = startTimestamp;
     }
 
-    public Timestamp getEndTimestamp() {
+    public String getEndTimestamp() {
         return endTimestamp;
     }
 
-    public void setEndTimestamp(Timestamp endTimestamp) {
+    public void setEndTimestamp(String endTimestamp) {
         this.endTimestamp = endTimestamp;
     }
 

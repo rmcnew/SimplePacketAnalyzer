@@ -21,6 +21,8 @@
 package com.liquidfortress.packetanalyzer.udp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
+import com.liquidfortress.packetanalyzer.main.Mode;
+import com.liquidfortress.packetanalyzer.pcap_file.PacketInfo;
 import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.packet.IllegalRawDataException;
@@ -37,10 +39,12 @@ public class UdpPacketProcessor {
     private static Logger log = Main.log;
 
 
-    public static void processUdpPacket(Packet packet, String sourceAddress, String destinationAddress, PcapFileSummary pcapFileSummary) {
+    public static void processUdpPacket(Packet packet, PcapFileSummary pcapFileSummary, PacketInfo packetInfo, Mode mode) {
         if (packet == null) {
             return; // skip empty packets
         }
+        String sourceAddress = packetInfo.get(PacketInfo.SOURCE_ADDRESS);
+        String destinationAddress = packetInfo.get(PacketInfo.DESTINATION_ADDRESS);
         try {
             log.trace("Converting to UDP packet");
             UdpPacket udpPacket = UdpPacket.newPacket(packet.getRawData(), 0, packet.length());

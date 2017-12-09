@@ -23,6 +23,7 @@ package com.liquidfortress.packetanalyzer.ip;
 import com.liquidfortress.packetanalyzer.icmp.IcmpPacketProcessor;
 import com.liquidfortress.packetanalyzer.main.Main;
 import com.liquidfortress.packetanalyzer.main.Mode;
+import com.liquidfortress.packetanalyzer.pcap_file.PacketInfo;
 import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import com.liquidfortress.packetanalyzer.tcp.TcpPacketProcessor;
 import com.liquidfortress.packetanalyzer.udp.UdpPacketProcessor;
@@ -32,7 +33,6 @@ import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.IpV6Packet;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.IpNumber;
-import org.pcap4j.util.MacAddress;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -46,7 +46,7 @@ public class IpPacketProcessor {
     private static Logger log = Main.log;
 
 
-    public static void processIpv4Packet(Packet packet, PcapFileSummary pcapFileSummary, Mode mode, MacAddress sourceMac) {
+    public static void processIpv4Packet(Packet packet, PcapFileSummary pcapFileSummary, PacketInfo packetInfo, Mode mode) {
         if (packet == null) {
             return; // skip empty packets
         }
@@ -54,25 +54,42 @@ public class IpPacketProcessor {
             log.trace("Converting to IPv4 packet");
             IpV4Packet ipV4Packet = IpV4Packet.newPacket(packet.getRawData(), 0, packet.length());
             IpV4Packet.IpV4Header ipV4Header = ipV4Packet.getHeader();
+            boolean fragmented = ipV4Header.getMoreFragmentFlag() || (ipV4Header.getFragmentOffset() > 0);
+            if (fragmented) {
+                int identification = ipV4Header.getIdentificationAsInt();
+                pcapFileSummary.ipDefragmenter.addFragment(identification, ipV4Packet);
+                if ((!ipV4Header.getMoreFragmentFlag()) && (ipV4Header.getFragmentOffset() > 0)) {
+                    ipV4Packet = pcapFileSummary.ipDefragmenter.defragment(identification);
+                    ipV4Header = ipV4Packet.getHeader();
+                    packetInfo.put(PacketInfo.IP_IDENTIFICATION, Integer.toString(identification));
+                    packetInfo.put(PacketInfo.WAS_FRAGMENTED, Boolean.TRUE.toString());
+                } else {
+                    return; // we need all the fragments before this packet can be processed further
+                }
+            }
             Inet4Address sourceAddress = ipV4Header.getSrcAddr();
             Inet4Address destAddress = ipV4Header.getDstAddr();
+
             if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
                 //pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
             }
+            packetInfo.put(PacketInfo.SOURCE_ADDRESS, sourceAddress.getHostAddress());
+            packetInfo.put(PacketInfo.DESTINATION_ADDRESS, destAddress.getHostAddress());
             log.trace("Adding IPv4 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());
             IpNumber ipNumber = ipV4Header.getProtocol();
+            packetInfo.put(PacketInfo.IP_PROTOCOL, ipNumber.toString());
             pcapFileSummary.ipProtocolCounter.increment(ipNumber);
             Packet payload = ipV4Packet.getPayload();
             if (ipNumber == IpNumber.ICMPV4) {
-                IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                IcmpPacketProcessor.processIcmpv4Packet(payload, pcapFileSummary, packetInfo, mode);
             } else if (ipNumber == IpNumber.ICMPV6) {
-                IcmpPacketProcessor.processIcmpv6Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                IcmpPacketProcessor.processIcmpv6Packet(payload, pcapFileSummary, packetInfo, mode);
             } else if (ipNumber == IpNumber.TCP) {
-                TcpPacketProcessor.processTcpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                TcpPacketProcessor.processTcpPacket(payload, pcapFileSummary, packetInfo, mode);
             } else if (ipNumber == IpNumber.UDP) {
-                UdpPacketProcessor.processUdpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                UdpPacketProcessor.processUdpPacket(payload, pcapFileSummary, packetInfo, mode);
             } else {
                 log.trace("Skipping packet: " + payload);
             }
@@ -82,7 +99,7 @@ public class IpPacketProcessor {
         }
     }
 
-    public static void processIpv6Packet(Packet packet, PcapFileSummary pcapFileSummary, Mode mode, MacAddress sourceMac) {
+    public static void processIpv6Packet(Packet packet, PcapFileSummary pcapFileSummary, PacketInfo packetInfo, Mode mode) {
         if (packet == null) {
             return; // skip empty packets
         }
@@ -95,20 +112,23 @@ public class IpPacketProcessor {
             if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
                 //pcapFileSummary.ipMacTracker.query(sourceAddress.getHostAddress(), sourceMac.toString());
             }
+            packetInfo.put(PacketInfo.SOURCE_ADDRESS, sourceAddress.getHostAddress());
+            packetInfo.put(PacketInfo.DESTINATION_ADDRESS, destAddress.getHostAddress());
             log.trace("Adding IPv6 addresses to set:  source: " + sourceAddress.getHostAddress() + ", dest: " + destAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(sourceAddress.getHostAddress());
             pcapFileSummary.uniqueIpAddresses.add(destAddress.getHostAddress());
             IpNumber ipNumber = ipV6Header.getProtocol();
+            packetInfo.put(PacketInfo.IP_PROTOCOL, ipNumber.toString());
             pcapFileSummary.ipProtocolCounter.increment(ipNumber);
             Packet payload = ipV6Packet.getPayload();
             if (ipNumber == IpNumber.ICMPV4) {
-                IcmpPacketProcessor.processIcmpv4Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                IcmpPacketProcessor.processIcmpv4Packet(payload, pcapFileSummary, packetInfo, mode);
             } else if (ipNumber == IpNumber.ICMPV6) {
-                IcmpPacketProcessor.processIcmpv6Packet(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                IcmpPacketProcessor.processIcmpv6Packet(payload, pcapFileSummary, packetInfo, mode);
             } else if (ipNumber == IpNumber.TCP) {
-                TcpPacketProcessor.processTcpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                TcpPacketProcessor.processTcpPacket(payload, pcapFileSummary, packetInfo, mode);
             } else if (ipNumber == IpNumber.UDP) {
-                UdpPacketProcessor.processUdpPacket(payload, sourceAddress.getHostAddress(), destAddress.getHostAddress(), pcapFileSummary);
+                UdpPacketProcessor.processUdpPacket(payload, pcapFileSummary, packetInfo, mode);
             } else {
                 log.trace("Skipping packet: " + payload);
             }

@@ -21,6 +21,8 @@
 package com.liquidfortress.packetanalyzer.tcp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
+import com.liquidfortress.packetanalyzer.main.Mode;
+import com.liquidfortress.packetanalyzer.pcap_file.PacketInfo;
 import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.packet.IllegalRawDataException;
@@ -36,10 +38,12 @@ import org.pcap4j.packet.namednumber.TcpPort;
 public class TcpPacketProcessor {
     private static Logger log = Main.log;
 
-    public static void processTcpPacket(Packet packet, String sourceAddress, String destinationAddress, PcapFileSummary pcapFileSummary) {
+    public static void processTcpPacket(Packet packet, PcapFileSummary pcapFileSummary, PacketInfo packetInfo, Mode mode) {
         if (packet == null) {
             return; // skip empty packets
         }
+        String sourceAddress = packetInfo.get(PacketInfo.SOURCE_ADDRESS);
+        String destinationAddress = packetInfo.get(PacketInfo.DESTINATION_ADDRESS);
         try {
             log.trace("Converting to TCP packet");
             TcpPacket tcpPacket = TcpPacket.newPacket(packet.getRawData(), 0, packet.length());

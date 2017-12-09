@@ -45,7 +45,7 @@ public class PcapFileProcessor {
     private static Logger log = Main.log;
 
 
-    public static void processEthernetPacket(Packet packet, PcapFileSummary pcapFileSummary, Mode mode) {
+    public static void processEthernetPacket(Packet packet, PcapFileSummary pcapFileSummary, PacketInfo packetInfo, Mode mode) {
         if (packet == null) {
             return; // skip empty packets
         }
@@ -55,15 +55,18 @@ public class PcapFileProcessor {
             EthernetPacket.EthernetHeader ethernetHeader = ethernetPacket.getHeader();
             MacAddress sourceMac = ethernetHeader.getSrcAddr();
             log.trace("Source MAC: " + sourceMac);
+            packetInfo.put(PacketInfo.SOURCE_MAC, sourceMac.toString());
             MacAddress destMac = ethernetHeader.getDstAddr();
             log.trace("Destination MAC: " + destMac);
+            packetInfo.put(PacketInfo.DESTINATION_MAC, destMac.toString());
             EtherType etherType = ethernetHeader.getType();
             log.trace("EtherType: " + etherType.toString());
+            packetInfo.put(PacketInfo.ETHERTYPE, etherType.toString());
             Packet payload = ethernetPacket.getPayload();
             if (etherType == EtherType.IPV4) {
-                IpPacketProcessor.processIpv4Packet(payload, pcapFileSummary, mode, sourceMac);
+                IpPacketProcessor.processIpv4Packet(payload, pcapFileSummary, packetInfo, mode);
             } else if (etherType == EtherType.IPV6) {
-                IpPacketProcessor.processIpv6Packet(payload, pcapFileSummary, mode, sourceMac);
+                IpPacketProcessor.processIpv6Packet(payload, pcapFileSummary, packetInfo, mode);
             } else if ((mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) && (etherType == EtherType.ARP)) {
                 pcapFileSummary.nonIpPacketCount++;
                 ArpPacketProcessor.processArpPacket(payload, pcapFileSummary);
@@ -88,11 +91,13 @@ public class PcapFileProcessor {
                 Packet packet;
                 Timestamp timestamp;
                 for (packet = pcapHandle.getNextPacket(); packet != null; packet = pcapHandle.getNextPacket()) {
+                    PacketInfo packetInfo = new PacketInfo();
                     timestamp = pcapHandle.getTimestamp();
+                    packetInfo.put(PacketInfo.TIMESTAMP, timestamp.toString());
                     pcapFileSummary.packetCount++;
                     log.trace("======= Processing packet " + pcapFileSummary.packetCount + " =======");
                     log.trace("Packet capture timestamp: " + timestamp);
-                    processEthernetPacket(packet, pcapFileSummary, mode);
+                    processEthernetPacket(packet, pcapFileSummary, packetInfo, mode);
                 }
                 if (mode == Mode.BASIC_ANALYSIS) {
                     printMode1Output(pcapFileSummary);
