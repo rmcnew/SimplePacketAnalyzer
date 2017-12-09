@@ -41,6 +41,9 @@ public class PacketInfo {
     public static final String IP_PROTOCOL = "IP_PROTOCOL";
     public static final String IP_IDENTIFICATION = "IP_IDENTIFICATION";
     public static final String WAS_FRAGMENTED = "WAS_FRAGMENTED";
+    public static final String SYN = "SYN";
+    public static final String ACK = "ACK";
+    public static final String FIN = "FIN";
 
     private final HashMap<String, String> info = new HashMap<>();
 

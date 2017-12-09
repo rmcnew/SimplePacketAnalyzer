@@ -30,7 +30,7 @@ import java.util.LinkedList;
 public class AttackSummary {
 
     private String attackName;
-    private String sourceIpAndPort;
+    private LinkedList<String> sourceIpAndPorts = new LinkedList<>();
     private LinkedList<String> targetIpAndPorts = new LinkedList<>();
     private String startTimestamp;
     private String endTimestamp;
@@ -47,12 +47,12 @@ public class AttackSummary {
         this.attackName = attackName;
     }
 
-    public String getSourceIpAndPort() {
-        return sourceIpAndPort;
+    public LinkedList<String> getSourceIpAndPorts() {
+        return sourceIpAndPorts;
     }
 
-    public void setSourceIpAndPort(String sourceIpAndPort) {
-        this.sourceIpAndPort = sourceIpAndPort;
+    public void setSourceIpAndPorts(LinkedList<String> sourceIpAndPorts) {
+        this.sourceIpAndPorts = sourceIpAndPorts;
     }
 
     public LinkedList<String> getTargetIpAndPorts() {
@@ -91,7 +91,7 @@ public class AttackSummary {
     public String toString() {
         return "AttackSummary{" +
                 "attackName='" + attackName + '\'' +
-                ", sourceIpAndPort='" + sourceIpAndPort + '\'' +
+                ", sourceIpAndPorts=" + sourceIpAndPorts +
                 ", targetIpAndPorts=" + targetIpAndPorts +
                 ", startTimestamp=" + startTimestamp +
                 ", endTimestamp=" + endTimestamp +

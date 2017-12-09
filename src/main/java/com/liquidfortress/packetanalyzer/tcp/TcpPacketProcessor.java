@@ -50,11 +50,16 @@ public class TcpPacketProcessor {
             TcpPacket.TcpHeader tcpHeader = tcpPacket.getHeader();
             TcpPort sourcePort = tcpHeader.getSrcPort();
             TcpPort destinationPort = tcpHeader.getDstPort();
+            packetInfo.put(PacketInfo.SOURCE_PORT, sourcePort.toString());
+            packetInfo.put(PacketInfo.DESTINATION_PORT, destinationPort.toString());
             String tcpSource = sourceAddress + ":" + sourcePort;
             String tcpDestination = destinationAddress + ":" + destinationPort;
             boolean syn = tcpHeader.getSyn();
             boolean ack = tcpHeader.getAck();
             boolean fin = tcpHeader.getFin();
+            packetInfo.put(PacketInfo.SYN, Boolean.toString(syn));
+            packetInfo.put(PacketInfo.ACK, Boolean.toString(ack));
+            packetInfo.put(PacketInfo.FIN, Boolean.toString(fin));
             long sequenceNumber = tcpHeader.getSequenceNumberAsLong();
             long acknowledgementNumber = tcpHeader.getAcknowledgmentNumberAsLong();
             log.trace("TCP{ source: " + tcpSource + ", destination: " + tcpDestination +
@@ -66,7 +71,7 @@ public class TcpPacketProcessor {
             if (tcpConnectionTracker == null) {
                 tcpConnectionTracker = new TcpConnectionTracker(tcpSource, tcpDestination);
                 if (syn) { // step 1: Client SYN
-                    tcpConnectionTracker.setStep1ClientSequenceNumber(sequenceNumber);
+                    tcpConnectionTracker.setStep1ClientSequenceNumber(sequenceNumber, pcapFileSummary, packetInfo);
                     tcpConnectionTracker.addFlowBytes((long) packet.length());
                     pcapFileSummary.activeTcpConnections.put(addressPair, tcpConnectionTracker);
                 }

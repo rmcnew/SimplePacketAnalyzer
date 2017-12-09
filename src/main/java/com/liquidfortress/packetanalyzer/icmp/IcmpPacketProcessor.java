@@ -56,10 +56,12 @@ public class IcmpPacketProcessor {
                          ((packet.getPayload() != null) && (packet.getPayload().getRawData() != null) &&
                                  (packet.getPayload().getRawData().length > MAX_PING_PAYLOAD)))) {
 
-                log.info("*** PING OF DEATH detected! \nICMPv4_ECHO_REQUEST packet info:\n" + packetInfo);
+                log.trace("*** PING OF DEATH detected! \nICMPv4_ECHO_REQUEST packet info:\n" + packetInfo);
                 AttackSummary attackSummary = new AttackSummary();
                 attackSummary.setAttackName("PING OF DEATH");
-                attackSummary.setSourceIpAndPort(sourceAddress);
+                LinkedList<String> sources = new LinkedList<>();
+                sources.add(sourceAddress);
+                attackSummary.setSourceIpAndPorts(sources);
                 LinkedList<String> targets = new LinkedList<>();
                 targets.add(destinationAddress);
                 attackSummary.setTargetIpAndPorts(targets);

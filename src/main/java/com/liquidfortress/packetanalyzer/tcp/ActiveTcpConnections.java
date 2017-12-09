@@ -29,6 +29,7 @@ import java.util.Set;
  * ActiveTcpConnections
  * <p/>
  * Tracks the state of multiple TCP connections
+ * until each connection is closed
  */
 public class ActiveTcpConnections {
 
