@@ -48,6 +48,7 @@ public class PcapFileSummary {
     public final IpProtocolCounter ipProtocolCounter = new IpProtocolCounter();
     public final IpMacTracker ipMacTracker = new IpMacTracker();
     public final IpDefragmenter ipDefragmenter = new IpDefragmenter();
+    public final PortScanDetector portScanDetector = new PortScanDetector();
     public final LinkedList<AttackSummary> attackSummaries = new LinkedList<>();
 
     public PcapFileSummary(String filename) {

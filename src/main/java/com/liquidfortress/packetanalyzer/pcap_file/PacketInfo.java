@@ -62,6 +62,21 @@ public class PacketInfo {
         info.put(s, s2);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PacketInfo that = (PacketInfo) o;
+
+        return info.equals(that.info);
+    }
+
+    @Override
+    public int hashCode() {
+        return info.hashCode();
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder("PacketInfo {\n");
         for (Map.Entry<String, String> entry : info.entrySet()) {

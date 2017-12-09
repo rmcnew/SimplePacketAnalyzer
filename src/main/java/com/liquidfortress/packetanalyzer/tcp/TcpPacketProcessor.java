@@ -50,8 +50,8 @@ public class TcpPacketProcessor {
             TcpPacket.TcpHeader tcpHeader = tcpPacket.getHeader();
             TcpPort sourcePort = tcpHeader.getSrcPort();
             TcpPort destinationPort = tcpHeader.getDstPort();
-            packetInfo.put(PacketInfo.SOURCE_PORT, sourcePort.toString());
-            packetInfo.put(PacketInfo.DESTINATION_PORT, destinationPort.toString());
+            packetInfo.put(PacketInfo.SOURCE_PORT, sourcePort.valueAsString());
+            packetInfo.put(PacketInfo.DESTINATION_PORT, destinationPort.valueAsString());
             String tcpSource = sourceAddress + ":" + sourcePort;
             String tcpDestination = destinationAddress + ":" + destinationPort;
             boolean syn = tcpHeader.getSyn();
@@ -65,6 +65,10 @@ public class TcpPacketProcessor {
             log.trace("TCP{ source: " + tcpSource + ", destination: " + tcpDestination +
                     ", SYN: " + syn + ", ACK: " + ack + ", FIN: " + fin +
                     ", seq number: " + sequenceNumber + ", ack number: " + acknowledgementNumber + " }");
+            // check for port scanning
+            if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                pcapFileSummary.portScanDetector.add(packetInfo, pcapFileSummary);
+            }
             // Track TCP connection state
             IpAddressPair addressPair = new IpAddressPair(tcpSource, tcpDestination);
             TcpConnectionTracker tcpConnectionTracker = pcapFileSummary.activeTcpConnections.get(addressPair);

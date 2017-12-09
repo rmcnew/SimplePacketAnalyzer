@@ -51,6 +51,11 @@ public class UdpPacketProcessor {
             UdpPacket.UdpHeader udpHeader = udpPacket.getHeader();
             UdpPort sourcePort = udpHeader.getSrcPort();
             UdpPort destinationPort = udpHeader.getDstPort();
+            packetInfo.put(PacketInfo.SOURCE_PORT, sourcePort.valueAsString());
+            packetInfo.put(PacketInfo.DESTINATION_PORT, destinationPort.valueAsString());
+            if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                //pcapFileSummary.portScanDetector.add(packetInfo);
+            }
             String udpSource = sourceAddress + ":" + sourcePort.toString();
             String udpDestination = destinationAddress + ":" + destinationPort.toString();
             log.trace("Adding UDP source to set: " + udpSource);
