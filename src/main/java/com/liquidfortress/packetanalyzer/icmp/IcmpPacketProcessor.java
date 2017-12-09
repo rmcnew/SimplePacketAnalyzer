@@ -22,15 +22,12 @@ package com.liquidfortress.packetanalyzer.icmp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
 import com.liquidfortress.packetanalyzer.main.Mode;
-import com.liquidfortress.packetanalyzer.pcap_file.AttackSummary;
 import com.liquidfortress.packetanalyzer.pcap_file.PacketInfo;
 import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import org.apache.logging.log4j.core.Logger;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.IcmpV4Type;
 import org.pcap4j.packet.namednumber.IcmpV6Type;
-
-import java.util.LinkedList;
 
 /**
  * IcmpPacketProcessor
@@ -40,8 +37,6 @@ import java.util.LinkedList;
 public class IcmpPacketProcessor {
     private static Logger log = Main.log;
 
-    private final static int MAX_PING_LENGTH = 65515;  // bytes
-    private final static int MAX_PING_PAYLOAD = 65507; // bytes
 
     public static void processIcmpv4Packet(Packet packet, PcapFileSummary pcapFileSummary, PacketInfo packetInfo, Mode mode) {
         if (packet == null) {
@@ -50,26 +45,12 @@ public class IcmpPacketProcessor {
         String sourceAddress = packetInfo.get(PacketInfo.SOURCE_ADDRESS);
         String destinationAddress = packetInfo.get(PacketInfo.DESTINATION_ADDRESS);
         try {
-            log.trace("Converting to ICMPv4 packet");
+            // detect Ping of Death
             if ((mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) &&
-                    (((packet.getRawData() != null) && (packet.getRawData().length > MAX_PING_LENGTH)) ||
-                         ((packet.getPayload() != null) && (packet.getPayload().getRawData() != null) &&
-                                 (packet.getPayload().getRawData().length > MAX_PING_PAYLOAD)))) {
-
-                log.trace("*** PING OF DEATH detected! \nICMPv4_ECHO_REQUEST packet info:\n" + packetInfo);
-                AttackSummary attackSummary = new AttackSummary();
-                attackSummary.setAttackName("PING OF DEATH");
-                LinkedList<String> sources = new LinkedList<>();
-                sources.add(sourceAddress);
-                attackSummary.setSourceIpAndPorts(sources);
-                LinkedList<String> targets = new LinkedList<>();
-                targets.add(destinationAddress);
-                attackSummary.setTargetIpAndPorts(targets);
-                attackSummary.setStartTimestamp(packetInfo.get(PacketInfo.TIMESTAMP));
-                attackSummary.setEndTimestamp(packetInfo.get(PacketInfo.TIMESTAMP));
-                pcapFileSummary.attackSummaries.add(attackSummary);
+                    (pcapFileSummary.pingOfDeathDetector.detect(packet, pcapFileSummary, packetInfo))) {
                 return;
             }
+            log.trace("Converting to ICMPv4 packet");
             IcmpV4CommonPacket icmpV4CommonPacket = IcmpV4CommonPacket.newPacket(packet.getRawData(), 0, packet.length());
             IcmpV4CommonPacket.IcmpV4CommonHeader icmpV4CommonHeader = icmpV4CommonPacket.getHeader();
             IcmpV4Type icmpV4Type = icmpV4CommonHeader.getType();
@@ -87,6 +68,10 @@ public class IcmpPacketProcessor {
                 short sequenceNumber = icmpV4EchoReplyHeader.getSequenceNumber();
                 log.trace("ICMPv4_ECHO_REPLY{ source: " + sourceAddress + ", destination: " + destinationAddress +
                         ", identifier: " + identifier + ", seq number: " + sequenceNumber + " }");
+                // detect SMURF attack
+                if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                    pcapFileSummary.smurfDetector.add(packetInfo, pcapFileSummary);
+                }
             } else {
                 log.trace("Other ICMPv4 packet with type: " + icmpV4Type);
             }

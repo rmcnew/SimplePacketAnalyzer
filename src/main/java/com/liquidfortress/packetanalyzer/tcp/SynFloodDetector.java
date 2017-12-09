@@ -18,53 +18,39 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.liquidfortress.packetanalyzer.pcap_file;
+package com.liquidfortress.packetanalyzer.tcp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
-import com.liquidfortress.packetanalyzer.tcp.IpAddressPair;
+import com.liquidfortress.packetanalyzer.pcap_file.AttackSummary;
+import com.liquidfortress.packetanalyzer.pcap_file.PacketInfo;
+import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
+import com.liquidfortress.packetanalyzer.util.PacketInfoUtils;
 import org.apache.logging.log4j.core.Logger;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 /**
- * PortScanDetector
+ * SynFloodDetector
  * <p/>
- * Tracks TCP and UDP traffic to detect port scanning
+ * Detect SYN FLOOD attacks
  */
-public class PortScanDetector {
-    /* We follow a modified version of the following heuristic for port scan detection:
-     * "A portscan is detected when a detection score of 21 points
-     * in a time range of 300 ms for one individual source IP address
-     * is exceeded. The detection score is calculated as follows:
-     * Scan of a TCP destination port less than 1024: 3 points
-     * Scan of a TCP destination port greater or equal 1024: 1 point
-     * Scan of ports 11, 12, 13, 2000: 10 points"
-     * Source: https://community.sophos.com/kb/en-us/115153
-     */
-    private static final int DETECTION_SCORE = 42;
-    private static final long LOOKBACK_WINDOW = 600; //milliseconds
+public class SynFloodDetector {
+    private static final long LOOKBACK_WINDOW = 600; // milliseconds
+    private static final int MAX_UNACKED_SYNS = 14;
     private static Logger log = Main.log;
+    private final HashMap<String, LinkedHashSet<PacketInfo>> syns = new HashMap<>();
 
     private boolean attackInProgress = false;
     private AttackSummary attackSummary = null;
-    private final HashMap<IpAddressPair, LinkedHashSet<PacketInfo>> traffic = new HashMap<>();
 
-    public void add(PacketInfo packetInfo, PcapFileSummary pcapFileSummary) {
-        if (packetInfo == null) {
-            throw new IllegalArgumentException("packetInfo cannot be null!");
-        }
-        // add the packetInfo
-        String sourceAddress = packetInfo.get(PacketInfo.SOURCE_ADDRESS);
-        String destinationAddress = packetInfo.get(PacketInfo.DESTINATION_ADDRESS);
+    public void detect(String serverAddress, PacketInfo packetInfo, PcapFileSummary pcapFileSummary) {
+        // add the step1PacketInfo to the unACKed SYN packets for this IP address
         Instant currentTime = Timestamp.valueOf(packetInfo.get(PacketInfo.TIMESTAMP)).toInstant();
         Instant lookbackStart = currentTime.minusMillis(LOOKBACK_WINDOW);
-
-        IpAddressPair ipAddressPair = new IpAddressPair(sourceAddress, destinationAddress);
-        LinkedHashSet<PacketInfo> packetInfos = traffic.get(ipAddressPair);
+        LinkedHashSet<PacketInfo> packetInfos = syns.get(serverAddress);
         if (packetInfos == null) {
             packetInfos = new LinkedHashSet<>();
             packetInfos.add(packetInfo);
@@ -80,35 +66,36 @@ public class PortScanDetector {
             keep.add(packetInfo);
             packetInfos = keep;
         }
-        traffic.put(ipAddressPair, packetInfos);
+        syns.put(serverAddress, packetInfos);
 
-        // calculate detection score
-        HashSet<String> portSet = new HashSet<>();
-        for (PacketInfo recentPi : packetInfos) {
-            String destinationPort = recentPi.get(PacketInfo.DESTINATION_PORT);
-            portSet.add(destinationPort);
-        }
-        if (portSet.size() >= DETECTION_SCORE && !attackInProgress) { // attack first detected
-            log.trace("*** PORT SCANNING detected!");
+        if (packetInfos.size() > MAX_UNACKED_SYNS && !attackInProgress) { // attack first detected
+            log.trace("*** SYN FLOOD attack detected!");
             attackInProgress = true;
             attackSummary = new AttackSummary();
-            attackSummary.setAttackName("PORT SCANNING");
-            attackSummary.setStartTimestamp(lookbackStart.toString());
+            attackSummary.setAttackName("SYN FLOOD");
+            attackSummary.setStartTimestamp(PacketInfoUtils.getEarliest(packetInfos).get(PacketInfo.TIMESTAMP));
             for (PacketInfo info : packetInfos) {
                 attackSummary.addSourceIpAndPort(info.get(PacketInfo.SOURCE_ADDRESS) + ":" + info.get(PacketInfo.SOURCE_PORT));
                 attackSummary.addTargetIpAndPort(info.get(PacketInfo.DESTINATION_ADDRESS) + ":" + info.get(PacketInfo.DESTINATION_PORT));
             }
-        } else if (portSet.size() >= DETECTION_SCORE && attackInProgress) { // add more details while attack in progress
+        } else if (packetInfos.size() > MAX_UNACKED_SYNS && attackInProgress) { // add more details while attack in progress
             for (PacketInfo info : packetInfos) {
                 attackSummary.addSourceIpAndPort(info.get(PacketInfo.SOURCE_ADDRESS) + ":" + info.get(PacketInfo.SOURCE_PORT));
                 attackSummary.addTargetIpAndPort(info.get(PacketInfo.DESTINATION_ADDRESS) + ":" + info.get(PacketInfo.DESTINATION_PORT));
             }
-        } else if (portSet.size() < DETECTION_SCORE && attackInProgress) { // attack ended, close out attack details
+        } else if (packetInfos.size() <= MAX_UNACKED_SYNS && attackInProgress) { // attack ended, close out attack details
             attackInProgress = false;
-            attackSummary.setEndTimestamp(currentTime.toString());
+            attackSummary.setEndTimestamp(PacketInfoUtils.getLatest(packetInfos).get(PacketInfo.TIMESTAMP));
             pcapFileSummary.attackSummaries.add(attackSummary);
             this.attackSummary = null;
         }
+    }
 
+    public void ackReceived(String serverAddress, PacketInfo step1PacketInfo) {
+        LinkedHashSet<PacketInfo> synPacketInfos = syns.get(serverAddress);
+        if (synPacketInfos != null) {
+            synPacketInfos.remove(step1PacketInfo);
+
+        }
     }
 }

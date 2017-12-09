@@ -20,7 +20,7 @@
 
 package com.liquidfortress.packetanalyzer.pcap_file;
 
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 
 /**
  * AttackSummary
@@ -30,11 +30,11 @@ import java.util.LinkedList;
 public class AttackSummary {
 
     private String attackName;
-    private LinkedList<String> sourceIpAndPorts = new LinkedList<>();
-    private LinkedList<String> targetIpAndPorts = new LinkedList<>();
+    private LinkedHashSet<String> sourceIpAndPorts = new LinkedHashSet<>();
+    private LinkedHashSet<String> targetIpAndPorts = new LinkedHashSet<>();
     private String startTimestamp;
     private String endTimestamp;
-    private LinkedList<String> usernameAndPasswords = new LinkedList<>();
+    private LinkedHashSet<String> usernameAndPasswords = new LinkedHashSet<>();
 
     public AttackSummary() {
     }
@@ -47,20 +47,24 @@ public class AttackSummary {
         this.attackName = attackName;
     }
 
-    public LinkedList<String> getSourceIpAndPorts() {
+    public LinkedHashSet<String> getSourceIpAndPorts() {
         return sourceIpAndPorts;
     }
 
-    public void setSourceIpAndPorts(LinkedList<String> sourceIpAndPorts) {
-        this.sourceIpAndPorts = sourceIpAndPorts;
+    public void addSourceIpAndPort(String sourceIpAndPort) {
+        if ((sourceIpAndPort != null) && (!sourceIpAndPort.isEmpty())) {
+            this.sourceIpAndPorts.add(sourceIpAndPort);
+        }
     }
 
-    public LinkedList<String> getTargetIpAndPorts() {
+    public LinkedHashSet<String> getTargetIpAndPorts() {
         return targetIpAndPorts;
     }
 
-    public void setTargetIpAndPorts(LinkedList<String> targetIpAndPorts) {
-        this.targetIpAndPorts = targetIpAndPorts;
+    public void addTargetIpAndPort(String targetIpAndPort) {
+        if ((targetIpAndPort != null) && (!targetIpAndPort.isEmpty())) {
+            this.targetIpAndPorts.add(targetIpAndPort);
+        }
     }
 
     public String getStartTimestamp() {
@@ -79,12 +83,14 @@ public class AttackSummary {
         this.endTimestamp = endTimestamp;
     }
 
-    public LinkedList<String> getUsernameAndPasswords() {
+    public LinkedHashSet<String> getUsernameAndPasswords() {
         return usernameAndPasswords;
     }
 
-    public void setUsernameAndPasswords(LinkedList<String> usernameAndPasswords) {
-        this.usernameAndPasswords = usernameAndPasswords;
+    public void addUsernameAndPassword(String usernameAndPassword) {
+        if ((usernameAndPassword != null) && (!usernameAndPassword.isEmpty())) {
+            this.usernameAndPasswords.add(usernameAndPassword);
+        }
     }
 
     @Override

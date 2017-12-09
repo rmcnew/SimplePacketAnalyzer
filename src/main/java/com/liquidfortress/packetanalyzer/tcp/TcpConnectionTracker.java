@@ -21,13 +21,10 @@
 package com.liquidfortress.packetanalyzer.tcp;
 
 import com.liquidfortress.packetanalyzer.main.Main;
-import com.liquidfortress.packetanalyzer.pcap_file.AttackSummary;
+import com.liquidfortress.packetanalyzer.main.Mode;
 import com.liquidfortress.packetanalyzer.pcap_file.PacketInfo;
 import com.liquidfortress.packetanalyzer.pcap_file.PcapFileSummary;
 import org.apache.logging.log4j.core.Logger;
-
-import java.util.HashMap;
-import java.util.LinkedList;
 
 /**
  * TcpConnectionTracker
@@ -36,8 +33,6 @@ import java.util.LinkedList;
  */
 public class TcpConnectionTracker {
 
-    public static final HashMap<String, LinkedList<PacketInfo>> syns = new HashMap<>();
-    public static final int MAX_UNACKED_SYNS = 14;
     public static final int NOT_DEFINED = -1;
     private static Logger log = Main.log;
 
@@ -110,7 +105,7 @@ public class TcpConnectionTracker {
         return step7CloseRequestAckNumber;
     }
 
-    public void setStep1ClientSequenceNumber(long step1ClientSequenceNumber, PcapFileSummary pcapFileSummary, PacketInfo packetInfo) {
+    public void setStep1ClientSequenceNumber(long step1ClientSequenceNumber, PcapFileSummary pcapFileSummary, PacketInfo packetInfo, Mode mode) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -120,32 +115,13 @@ public class TcpConnectionTracker {
             return;
         }
         this.step1ClientSequenceNumber = step1ClientSequenceNumber;
-        this.step1PacketInfo = packetInfo;
-        LinkedList<PacketInfo> synPacketInfos = syns.get(serverAddress);
-        if (synPacketInfos == null) {
-            synPacketInfos = new LinkedList<>();
-        }
-        synPacketInfos.add(this.step1PacketInfo);
-        syns.put(serverAddress, synPacketInfos);
-        if (synPacketInfos.size() > MAX_UNACKED_SYNS) {
-            log.trace("*** SYN FLOOD attack detected!");
-            AttackSummary attackSummary = new AttackSummary();
-            attackSummary.setAttackName("SYN FLOOD");
-            attackSummary.setStartTimestamp(synPacketInfos.getFirst().get(PacketInfo.TIMESTAMP));
-            attackSummary.setEndTimestamp(synPacketInfos.getLast().get(PacketInfo.TIMESTAMP));
-            LinkedList<String> sources = new LinkedList<>();
-            LinkedList<String> targets = new LinkedList<>();
-            for (PacketInfo info : synPacketInfos) {
-                sources.add(info.get(PacketInfo.SOURCE_ADDRESS) + ":" + info.get(PacketInfo.SOURCE_PORT));
-                targets.add(info.get(PacketInfo.DESTINATION_ADDRESS) + ":" + info.get(PacketInfo.DESTINATION_PORT));
-            }
-            attackSummary.setSourceIpAndPorts(sources);
-            attackSummary.setTargetIpAndPorts(targets);
-            pcapFileSummary.attackSummaries.add(attackSummary);
+        if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+            this.step1PacketInfo = packetInfo;
+            pcapFileSummary.synFloodDetector.detect(serverAddress, this.step1PacketInfo, pcapFileSummary);
         }
     }
 
-    public void setStep2Numbers(long step2ServerAckNumber, long step2ServerSequenceNumber) {
+    public void setStep2Numbers(long step2ServerAckNumber, long step2ServerSequenceNumber, PcapFileSummary pcapFileSummary, Mode mode) {
         if (this.closed) {
             log.trace("This connection was previously closed!");
             return;
@@ -166,11 +142,11 @@ public class TcpConnectionTracker {
         }
         this.step2ServerAckNumber = step2ServerAckNumber;
         this.step2ServerSequenceNumber = step2ServerSequenceNumber;
-        LinkedList<PacketInfo> synPacketInfos = syns.get(serverAddress);
-        if (synPacketInfos != null) {
-            synPacketInfos.remove(this.step1PacketInfo);
+        if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+            pcapFileSummary.synFloodDetector.ackReceived(serverAddress, this.step1PacketInfo);
             this.step1PacketInfo = null;
         }
+
     }
 
     public void setStep3Numbers(long step3ClientAckNumber, long step3ClientSequenceNumber) {

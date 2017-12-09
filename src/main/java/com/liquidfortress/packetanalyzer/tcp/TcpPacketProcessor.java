@@ -75,13 +75,13 @@ public class TcpPacketProcessor {
             if (tcpConnectionTracker == null) {
                 tcpConnectionTracker = new TcpConnectionTracker(tcpSource, tcpDestination);
                 if (syn) { // step 1: Client SYN
-                    tcpConnectionTracker.setStep1ClientSequenceNumber(sequenceNumber, pcapFileSummary, packetInfo);
+                    tcpConnectionTracker.setStep1ClientSequenceNumber(sequenceNumber, pcapFileSummary, packetInfo, mode);
                     tcpConnectionTracker.addFlowBytes((long) packet.length());
                     pcapFileSummary.activeTcpConnections.put(addressPair, tcpConnectionTracker);
                 }
             } else if (!tcpConnectionTracker.isConnected() && !tcpConnectionTracker.isClosed()) {
                 if (syn && ack) { // step 2: Server SYN-ACK
-                    tcpConnectionTracker.setStep2Numbers(acknowledgementNumber, sequenceNumber);
+                    tcpConnectionTracker.setStep2Numbers(acknowledgementNumber, sequenceNumber, pcapFileSummary, mode);
                     tcpConnectionTracker.addFlowBytes((long) packet.length());
                 } else if (ack) { // step 3: Client ACK
                     tcpConnectionTracker.setStep3Numbers(acknowledgementNumber, sequenceNumber);

@@ -21,12 +21,15 @@
 package com.liquidfortress.packetanalyzer.pcap_file;
 
 import com.liquidfortress.packetanalyzer.arp.IpMacTracker;
+import com.liquidfortress.packetanalyzer.icmp.PingOfDeathDetector;
+import com.liquidfortress.packetanalyzer.icmp.SmurfDetector;
 import com.liquidfortress.packetanalyzer.ip.IpDefragmenter;
 import com.liquidfortress.packetanalyzer.statistics.IpProtocolCounter;
 import com.liquidfortress.packetanalyzer.statistics.UdpSources;
 import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
 import com.liquidfortress.packetanalyzer.tcp.ActiveTcpConnections;
 import com.liquidfortress.packetanalyzer.tcp.ClosedTcpConnections;
+import com.liquidfortress.packetanalyzer.tcp.SynFloodDetector;
 
 import java.util.LinkedList;
 
@@ -49,6 +52,9 @@ public class PcapFileSummary {
     public final IpMacTracker ipMacTracker = new IpMacTracker();
     public final IpDefragmenter ipDefragmenter = new IpDefragmenter();
     public final PortScanDetector portScanDetector = new PortScanDetector();
+    public final PingOfDeathDetector pingOfDeathDetector = new PingOfDeathDetector();
+    public final SmurfDetector smurfDetector = new SmurfDetector();
+    public final SynFloodDetector synFloodDetector = new SynFloodDetector();
     public final LinkedList<AttackSummary> attackSummaries = new LinkedList<>();
 
     public PcapFileSummary(String filename) {
