@@ -79,7 +79,7 @@ public class SmurfDetector {
             sourceAddressSet.add(sourceAddress);
         }
         if (sourceAddressSet.size() >= DETECTION_SCORE && !attackInProgress) { // attack first detected
-            log.info("*** SMURF ATTACK detected!");
+            log.trace("*** SMURF ATTACK detected!");
             attackInProgress = true;
             attackSummary = new AttackSummary();
             attackSummary.setAttackName("SMURF ATTACK");

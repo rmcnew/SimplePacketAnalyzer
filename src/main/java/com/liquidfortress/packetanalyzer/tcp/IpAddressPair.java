@@ -55,4 +55,12 @@ public class IpAddressPair {
     public int hashCode() {
         return 31 * (addr1.hashCode() + addr2.hashCode());
     }
+
+    @Override
+    public String toString() {
+        return "IpAddressPair{" +
+                "addr1='" + addr1 + '\'' +
+                ", addr2='" + addr2 + '\'' +
+                '}';
+    }
 }

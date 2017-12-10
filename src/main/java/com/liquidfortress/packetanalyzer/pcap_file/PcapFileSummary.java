@@ -27,6 +27,7 @@ import com.liquidfortress.packetanalyzer.ip.IpDefragmenter;
 import com.liquidfortress.packetanalyzer.statistics.IpProtocolCounter;
 import com.liquidfortress.packetanalyzer.statistics.UdpSources;
 import com.liquidfortress.packetanalyzer.statistics.UniqueIpAddresses;
+import com.liquidfortress.packetanalyzer.tcp.AccountBruteForceDetector;
 import com.liquidfortress.packetanalyzer.tcp.ActiveTcpConnections;
 import com.liquidfortress.packetanalyzer.tcp.ClosedTcpConnections;
 import com.liquidfortress.packetanalyzer.tcp.SynFloodDetector;
@@ -55,6 +56,7 @@ public class PcapFileSummary {
     public final PingOfDeathDetector pingOfDeathDetector = new PingOfDeathDetector();
     public final SmurfDetector smurfDetector = new SmurfDetector();
     public final SynFloodDetector synFloodDetector = new SynFloodDetector();
+    public final AccountBruteForceDetector accountBruteForceDetector = new AccountBruteForceDetector();
     public final LinkedList<AttackSummary> attackSummaries = new LinkedList<>();
 
     public PcapFileSummary(String filename) {

@@ -65,12 +65,22 @@ public class TcpPacketProcessor {
             log.trace("TCP{ source: " + tcpSource + ", destination: " + tcpDestination +
                     ", SYN: " + syn + ", ACK: " + ack + ", FIN: " + fin +
                     ", seq number: " + sequenceNumber + ", ack number: " + acknowledgementNumber + " }");
-            // check for port scanning
+
             if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                // check for port scanning
                 pcapFileSummary.portScanDetector.add(packetInfo, pcapFileSummary);
             }
+
             // Track TCP connection state
+            //// Track connection handshake
             IpAddressPair addressPair = new IpAddressPair(tcpSource, tcpDestination);
+            if (mode == Mode.POSSIBLE_ATTACKS_ANALYSIS) {
+                // check for brute force / dictionary telnet attack
+                TcpConnectionTracker tcpConnectionTracker = pcapFileSummary.activeTcpConnections.get(addressPair);
+                if (tcpConnectionTracker != null && tcpConnectionTracker.isConnected()) {
+                    pcapFileSummary.accountBruteForceDetector.detect(packet.getPayload(), packetInfo, pcapFileSummary);
+                }
+            }
             TcpConnectionTracker tcpConnectionTracker = pcapFileSummary.activeTcpConnections.get(addressPair);
             if (tcpConnectionTracker == null) {
                 tcpConnectionTracker = new TcpConnectionTracker(tcpSource, tcpDestination);
@@ -89,6 +99,8 @@ public class TcpPacketProcessor {
                     pcapFileSummary.tcpConnectionCount++;
                 }
             } else if (tcpConnectionTracker.isConnected() && !tcpConnectionTracker.isClosed()) {
+                // check for password guessing brute force / dictionary attacks while the connection is open
+                // Track connection closing steps
                 if (fin && tcpConnectionTracker.getStep4CloseRequestSequenceNumber() == TcpConnectionTracker.NOT_DEFINED) {
                     // step 4: Initiator FIN_WAIT_1
                     tcpConnectionTracker.setStep4CloseRequestSequenceNumber(sequenceNumber);
