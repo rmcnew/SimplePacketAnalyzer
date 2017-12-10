@@ -64,7 +64,8 @@ public class LoggerFactory {
         // Define layout
         PatternLayout patternLayout = PatternLayout.newBuilder()
                 .withConfiguration(configuration)
-                .withPattern("%d{ISO8601} [%level] [%F:%L] %msg%n")
+                // uncomment this pattern for debugging
+                //.withPattern("%d{ISO8601} [%level] [%F:%L] %msg%n")
                 .build();
         // Add appenders
         AppenderRef[] appenderRefs;
