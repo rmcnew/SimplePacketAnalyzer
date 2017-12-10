@@ -140,8 +140,7 @@ public class TcpPacketProcessor {
                 }
             }
         } catch (IllegalRawDataException e) {
-            log.error("Exception occurred while processing a packet. Exception was: " + e);
-            System.exit(-2);
+            log.trace("Exception occurred while processing a packet. Exception was: " + e);
         }
     }
 }

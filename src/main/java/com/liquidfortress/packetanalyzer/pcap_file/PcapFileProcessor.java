@@ -76,7 +76,6 @@ public class PcapFileProcessor {
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
-            System.exit(-2);
         }
     }
 
@@ -88,9 +87,9 @@ public class PcapFileProcessor {
             DataLinkType dataLinkType = pcapHandle.getDlt();
             log.trace("DataLinkType is: " + dataLinkType);
             if (dataLinkType == DataLinkType.EN10MB) { // Ethernet
-                Packet packet;
                 Timestamp timestamp;
-                for (packet = pcapHandle.getNextPacket(); packet != null; packet = pcapHandle.getNextPacket()) {
+                Packet packet = pcapHandle.getNextPacket();
+                while (packet != null) {
                     PacketInfo packetInfo = new PacketInfo();
                     timestamp = pcapHandle.getTimestamp();
                     packetInfo.put(PacketInfo.TIMESTAMP, timestamp.toString());
@@ -98,7 +97,14 @@ public class PcapFileProcessor {
                     log.trace("======= Processing packet " + pcapFileSummary.packetCount + " =======");
                     log.trace("Packet capture timestamp: " + timestamp);
                     processEthernetPacket(packet, pcapFileSummary, packetInfo, mode);
+                    try {
+                        packet = pcapHandle.getNextPacket();
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        log.trace("Exception occurred while processing pcapFile: " + pcapFile + ".  Exception was: " + e);
+                        packet = pcapHandle.getNextPacket();
+                    }
                 }
+
                 if (mode == Mode.BASIC_ANALYSIS) {
                     printMode1Output(pcapFileSummary);
                 } else if (mode == Mode.DETAILED_ANALYSIS) {

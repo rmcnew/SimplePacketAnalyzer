@@ -59,7 +59,6 @@ public class ArpPacketProcessor {
 
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
-            System.exit(-2);
         }
     }
 }

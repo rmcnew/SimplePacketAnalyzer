@@ -288,10 +288,26 @@ public class TcpConnectionTracker {
         builder.append("TCP Flow Details: " + clientAddress + " => " + serverAddress + "\n");
         builder.append("=== Connection Establishment Handshake Details ===\n");
         builder.append("Client SYN Sequence Number: " + step1ClientSequenceNumber + "\n");
-        builder.append("Server SYN-ACK Acknowledge Number: " + step2ServerAckNumber + "\n");
-        builder.append("Server SYN-ACK Sequence Number: " + step2ServerSequenceNumber + "\n");
-        builder.append("Client ACK Acknowledge Number: " + step3ClientAckNumber + "\n");
-        builder.append("Client ACK Sequence Number: " + step3ClientSequenceNumber + "\n");
+        if (step2ServerAckNumber != NOT_DEFINED) {
+            builder.append("Server SYN-ACK Acknowledge Number: " + step2ServerAckNumber + "\n");
+        } else {
+            builder.append("Server SYN-ACK Acknowledge Number: TCP Connection Handshake Not Completed\n");
+        }
+        if (step2ServerSequenceNumber != NOT_DEFINED) {
+            builder.append("Server SYN-ACK Sequence Number: " + step2ServerSequenceNumber + "\n");
+        } else {
+            builder.append("Server SYN-ACK Sequence Number: TCP Connection Handshake Not Completed\n");
+        }
+        if (step3ClientAckNumber != NOT_DEFINED) {
+            builder.append("Client ACK Acknowledge Number: " + step3ClientAckNumber + "\n");
+        } else {
+            builder.append("Client ACK Acknowledge Number: TCP Connection Handshake Not Completed\n");
+        }
+        if (step3ClientSequenceNumber != NOT_DEFINED) {
+            builder.append("Client ACK Sequence Number: " + step3ClientSequenceNumber + "\n");
+        } else {
+            builder.append("Client ACK Sequence Number: TCP Connection Handshake Not Completed\n");
+        }
         builder.append("=== Connection Termination Details ===\n");
         if (step4CloseRequestSequenceNumber != NOT_DEFINED) {
             builder.append("Initiator FIN Sequence Number: " + step4CloseRequestSequenceNumber + "\n");

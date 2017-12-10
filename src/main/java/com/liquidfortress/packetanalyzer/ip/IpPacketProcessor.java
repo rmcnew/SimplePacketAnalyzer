@@ -55,17 +55,22 @@ public class IpPacketProcessor {
             IpV4Packet ipV4Packet = IpV4Packet.newPacket(packet.getRawData(), 0, packet.length());
             IpV4Packet.IpV4Header ipV4Header = ipV4Packet.getHeader();
             boolean fragmented = ipV4Header.getMoreFragmentFlag() || (ipV4Header.getFragmentOffset() > 0);
-            if (fragmented) {
-                int identification = ipV4Header.getIdentificationAsInt();
-                pcapFileSummary.ipDefragmenter.addFragment(identification, ipV4Packet);
-                if ((!ipV4Header.getMoreFragmentFlag()) && (ipV4Header.getFragmentOffset() > 0)) {
-                    ipV4Packet = pcapFileSummary.ipDefragmenter.defragment(identification);
-                    ipV4Header = ipV4Packet.getHeader();
-                    packetInfo.put(PacketInfo.IP_IDENTIFICATION, Integer.toString(identification));
-                    packetInfo.put(PacketInfo.WAS_FRAGMENTED, Boolean.TRUE.toString());
-                } else {
-                    return; // we need all the fragments before this packet can be processed further
+            try {
+                if (fragmented) {
+                    int identification = ipV4Header.getIdentificationAsInt();
+                    pcapFileSummary.ipDefragmenter.addFragment(identification, ipV4Packet);
+                    if ((!ipV4Header.getMoreFragmentFlag()) && (ipV4Header.getFragmentOffset() > 0)) {
+                        ipV4Packet = pcapFileSummary.ipDefragmenter.defragment(identification);
+                        ipV4Header = ipV4Packet.getHeader();
+                        packetInfo.put(PacketInfo.IP_IDENTIFICATION, Integer.toString(identification));
+                        packetInfo.put(PacketInfo.WAS_FRAGMENTED, Boolean.TRUE.toString());
+                    } else {
+                        return; // we need all the fragments before this packet can be processed further
+                    }
                 }
+            } catch (IllegalArgumentException e) {
+                log.trace("Exception occurred while processing a packet. Exception was: " + e);
+                return;
             }
             Inet4Address sourceAddress = ipV4Header.getSrcAddr();
             Inet4Address destAddress = ipV4Header.getDstAddr();
@@ -95,7 +100,6 @@ public class IpPacketProcessor {
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
-            System.exit(-2);
         }
     }
 
@@ -134,7 +138,6 @@ public class IpPacketProcessor {
             }
         } catch (IllegalRawDataException e) {
             log.error("Exception occurred while processing a packet. Exception was: " + e);
-            System.exit(-2);
         }
     }
 }
